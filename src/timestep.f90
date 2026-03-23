@@ -249,9 +249,9 @@ module Timestep
 !
       if(number_of_substeps_per_timestep > 0) then
         headt = .false.
-        lsubstepping_in_time=.true.
         lfirst=.true.
         call pde(f,df,p)
+        lsubstepping_in_time=.true.
         do i=1,number_of_substeps_per_timestep
           do itsub=1,itorder
             call advance_substep(f,df,p,i,dt/number_of_substeps_per_timestep)
