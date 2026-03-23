@@ -19,7 +19,7 @@
 ! PENCILS PROVIDED b2; b21; bf2; bij(3,3); del2a(3); graddiva(3); jj(3); jj_ohm(3); (3)
 ! PENCILS PROVIDED curlb(3); e3xa(3)
 ! PENCILS PROVIDED el(3); e2; bijtilde(3,3),bij_cov_corr(3,3)
-! PENCILS PROVIDED j2; jb; ujxb; va2; jxb(3); jxbr(3); jxbr2; ub; uj; ob; uxb(3); uxbb(3); uxb2
+! PENCILS PROVIDED j2; jb; va2; jxb(3); jxbr(3); jxbr2; ub; uj; ob; uxb(3); uxbb(3); uxb2
 ! PENCILS PROVIDED uxj(3); chibp; beta; beta1; uga(3); uuadvec_gaa(3); djuidjbi; jo
 ! PENCILS PROVIDED StokesI; StokesQ; StokesU; StokesQ1; StokesU1
 ! PENCILS PROVIDED ujxb; oxuxb(3); jxbxb(3); jxbrxb(3)
