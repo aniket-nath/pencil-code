@@ -212,7 +212,6 @@ module Timestep
       use Equ, only: pde
 !
       real, dimension (mx,my,mz,mfarray) :: f
-      real, save, allocatable, dimension (:,:,:,:) :: f_substepping_copy
       real, dimension (mx,my,mz,mvar) :: df
       type (pencil_case) :: p
       real :: t_start
