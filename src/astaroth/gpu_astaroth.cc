@@ -1235,7 +1235,7 @@ void load_f_ode()
 #endif
 }
 /***********************************************************************************************/
-extern "C" void beforeBoundaryGPU(bool lrmv, int isubstep, double t)
+extern "C" void beforeBoundaryGPU(bool lrmv, int isubstep, double t, bool lsubstepping_in_time)
 {
 // Load values of ODE variables to GPU since before boundary may use them
 	load_f_ode();
@@ -1245,6 +1245,7 @@ extern "C" void beforeBoundaryGPU(bool lrmv, int isubstep, double t)
         acDeviceSetInput(acGridGetDevice(), AC_step_num,(PC_SUB_STEP_NUMBER) (isubstep-1));
  	acDeviceSetInput(acGridGetDevice(), AC_lrmv, lrmv);
  	acDeviceSetInput(acGridGetDevice(), AC_t, AcReal(t));
+ 	acDeviceSetInput(acGridGetDevice(), AC_lsubstepping_in_time, lsubstepping_in_time);
 
 // Execute all "before-boundary-actions", which do not update the halos, by separate task graph
 
@@ -1793,8 +1794,8 @@ void autotune_all_integration_substeps()
   	acDeviceSetInput(acGridGetDevice(), AC_lrmv,true);
 	acGetOptimizedDSLTaskGraph(AC_rhs);
         if (rank==0 && ldebug) printf("memusage after GetOptimizedDSLTaskGraph= %f MBytes\n", acMemUsage()/1024.);
- 	beforeBoundaryGPU(true,i,0.0);
-        beforeBoundaryGPU(false,i,0.0);
+ 	beforeBoundaryGPU(true,i,0.0,false);
+        beforeBoundaryGPU(false,i,0.0,false);
   }
   radTransfer();
   splitUpdate(1e11,1);
@@ -2499,7 +2500,7 @@ extern "C" void gpuSetDt(double t)
 {
 	acGridSynchronizeStream(STREAM_ALL);
  	acDeviceSetInput(acGridGetDevice(), AC_t,AcReal(t));
-	beforeBoundaryGPU(false,0,t);
+	beforeBoundaryGPU(false,0,t,false);
 	if (!lcourant_dt)
 	{
 		fprintf(stderr,"gpuSetDt works only for Courant timestep!!\n");

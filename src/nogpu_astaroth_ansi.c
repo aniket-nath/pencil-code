@@ -29,7 +29,7 @@ void FTNIZE(rhs_gpu_c)(FINT *isubstep, double* t)
 {
 }
 /* ------------------------------------------------------------------- */
-void FTNIZE(before_boundary_gpu_c)(FINT* lrmv, FINT *isubstep, double *t)
+void FTNIZE(before_boundary_gpu_c)(FINT* lrmv, FINT *isubstep, double *t, FINT* lsubstepping_in_time)
 {
 }
 /* ------------------------------------------------------------------- */

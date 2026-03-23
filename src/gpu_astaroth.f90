@@ -213,7 +213,7 @@ contains
       integer,                            intent(IN)    :: isubstep
       real(KIND=rkind8), intent(IN) :: t
       logical :: lrmv
-      integer :: lrmv_int
+      integer :: lrmv_int,lsubstepping_in_time_int
 !
       !TP: pass int since integers are more compatible with C than logical to booleans
       if (lrmv) then
@@ -221,7 +221,13 @@ contains
       else
         lrmv_int = 0
       endif
-      call before_boundary_gpu_c(lrmv_int,isubstep,t)
+      if(lsubstepping_in_time) then
+       lsubstepping_in_time_int = 1
+      else
+       lsubstepping_in_time_int = 0
+      endif
+
+      call before_boundary_gpu_c(lrmv_int,isubstep,t,lsubstepping_in_time_int)
 !
     endsubroutine before_boundary_gpu
 !**************************************************************************

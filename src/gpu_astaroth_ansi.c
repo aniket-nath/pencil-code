@@ -27,7 +27,7 @@ void initializeGPU(REAL*, FINT, double, FINT, FINT, FINT);
 void finalizeGPU();
 void getFArrayIn(REAL **);
 void substepGPU(int, double);
-void beforeBoundaryGPU(bool, int, double);
+void beforeBoundaryGPU(bool, int, double, bool);
 void afterSubStepGPU();
 void radTransfer();
 void copyFarray(REAL*);
@@ -116,11 +116,11 @@ void FTNIZE(get_farray_ptr_gpu_c)(REAL** p_f_in)
   getFArrayIn(p_f_in);
 }
 /* ---------------------------------------------------------------------- */
-void FTNIZE(before_boundary_gpu_c)(FINT *lrmv, FINT *isubstep, double *t)
+void FTNIZE(before_boundary_gpu_c)(FINT *lrmv, FINT *isubstep, double *t, FINT *lsubstepping_in_time)
 {
   beforeBoundaryGPU(
 		  (*lrmv == 1) ? true : false,
-		  *isubstep,*t);
+		  *isubstep,*t,*lsubstepping_in_time);
 }
 /* ---------------------------------------------------------------------- */
 void FTNIZE(update_after_substep_gpu_c)()
