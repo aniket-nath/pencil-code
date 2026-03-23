@@ -533,7 +533,7 @@ Example SLURM batch script (CRAY machines):
 source src/.moduleinfo
 
 export LD_LIBRARY_PATH=${CRAY_LD_LIBRARY_PATH}:$LD_LIBRARY_PATH
-export OMP_NUM_THREADS= =${SLURM_CPUS_PER_TASK}
+export OMP_NUM_THREADS=${SLURM_CPUS_PER_TASK}
 export OMP_MAX_ACTIVE_LEVELS=2
 export OMP_PROC_BIND=close,spread
 export OMP_WAIT_POLICY=PASSIVE
