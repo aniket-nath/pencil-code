@@ -195,12 +195,12 @@ module FArrayManager
         endif
         maux_vtxbuf_index(ivar) = vtxbuf_index
         read_vtxbuf_from_gpu(ivar) = merge(1,0,loptest(read_from_gpu))
-        if (present(array)) then
+        if (loptest(array)) then
           do i = 1,array-1
             maux_vtxbuf_index(ivar+i) = vtxbuf_index+i
             read_vtxbuf_from_gpu(ivar+i) = merge(1,0,loptest(read_from_gpu))
           enddo
-        else if (present(vector)) then
+        else if (loptest(vector)) then
           do i = 1,vector-1
             maux_vtxbuf_index(ivar+i) = vtxbuf_index+i
             read_vtxbuf_from_gpu(ivar+i) = merge(1,0,loptest(read_from_gpu))
