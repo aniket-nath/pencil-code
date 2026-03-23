@@ -635,6 +635,16 @@ module Cdata
   logical :: lpencil_check_at_work=.false.
   integer :: ipencil_swap=0
 !
+!  Variables for substepping in time
+!
+!  For knowing does the current iteration correspond to a substep loop
+  logical :: lsubstepping_in_time=.false.
+!  For knowing whether substepping is in use or not
+  logical :: lsubstepping_active=.false.
+!  For knowing which variables are substepped
+  logical, dimension(mvar) :: variable_substepped=.false.
+
+!
 !  Variables related to calculating diagnostic output.
 !
   character :: comment_char='#'

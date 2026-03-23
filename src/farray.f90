@@ -13,7 +13,7 @@ module FArrayManager
 !
   use Cparam, only: mvar,maux,mglobal,maux_com,mscratch,lgpu
   use Cdata, only: nvar,naux,nscratch,nglobal,naux_com,datadir,lroot,lwrite_aux,lreloading, &
-                   n_odevars,f_ode,df_ode,lode,f_ode_diagnostics
+                   n_odevars,f_ode,df_ode,lode,f_ode_diagnostics,variable_substepped
   use HDF5_IO
   use Messages
 !
@@ -125,6 +125,8 @@ module FArrayManager
 
 !***********************************************************************
     subroutine farray_register_pde(varname,ivar,vector,array,ierr,lsubstepped)
+
+      use General, only: loptest
 !
 !  Register a PDE variable in the f array.
 !
@@ -135,10 +137,16 @@ module FArrayManager
       logical, optional, intent(in) :: lsubstepped
 !
       integer, parameter :: vartype = iFARRAY_TYPE_PDE
+      integer :: i
 !
       call farray_register_variable(varname,ivar,vartype,vector=vector,array=array,ierr=ierr)
       if(loptest(lsubstepped)) then
-        
+        variable_substepped(ivar) = .true.
+        if (present(array)) then
+          do i = 1,array-1
+            variable_substepped(ivar+i) = .true.
+          enddo
+        endif
       endif
 !
     endsubroutine farray_register_pde
