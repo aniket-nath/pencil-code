@@ -299,7 +299,7 @@ sub start_cmd {
     honour_nostart();
     setup_datadir();
     run_extra_setup_script();
-    setup_environment();
+    setup_environment("start");
     setup_local_disc();
     handle_local_binary($start_x);
     identify_revision($start_x);
@@ -315,7 +315,7 @@ sub start_cmd {
 sub run_cmd {
 # Run run.x
 
-    setup_environment();
+    setup_environment("run");
     setup_local_disc();
     handle_local_binary($run_x);
     distribute_var_files();
@@ -444,7 +444,9 @@ sub setup_environment {
       $ENV{OMP_NUM_THREADS} = '$SLURM_CPUS_PER_TASK';
     }
     if ($settings{'mpich'}) {
-      $ENV{MPICH_GPU_SUPPORT_ENABLED} = '1';
+      if($_[0] eq "run") {
+        $ENV{MPICH_GPU_SUPPORT_ENABLED} = '1';
+      }
     }
 }
 # ---------------------------------------------------------------------- #
