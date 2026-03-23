@@ -124,7 +124,7 @@ module FArrayManager
   contains
 
 !***********************************************************************
-    subroutine farray_register_pde(varname,ivar,vector,array,ierr)
+    subroutine farray_register_pde(varname,ivar,vector,array,ierr,lsubstepped)
 !
 !  Register a PDE variable in the f array.
 !
@@ -132,10 +132,14 @@ module FArrayManager
       integer, intent(out)  :: ivar
       integer, optional, intent(in) :: vector, array
       integer, optional, intent(out) :: ierr
+      logical, optional, intent(in) :: lsubstepped
 !
       integer, parameter :: vartype = iFARRAY_TYPE_PDE
 !
       call farray_register_variable(varname,ivar,vartype,vector=vector,array=array,ierr=ierr)
+      if(loptest(lsubstepped)) then
+        
+      endif
 !
     endsubroutine farray_register_pde
 !***********************************************************************
@@ -195,12 +199,12 @@ module FArrayManager
         endif
         maux_vtxbuf_index(ivar) = vtxbuf_index
         read_vtxbuf_from_gpu(ivar) = merge(1,0,loptest(read_from_gpu))
-        if (loptest(array)) then
+        if (present(array)) then
           do i = 1,array-1
             maux_vtxbuf_index(ivar+i) = vtxbuf_index+i
             read_vtxbuf_from_gpu(ivar+i) = merge(1,0,loptest(read_from_gpu))
           enddo
-        else if (loptest(vector)) then
+        else if (present(vector)) then
           do i = 1,vector-1
             maux_vtxbuf_index(ivar+i) = vtxbuf_index+i
             read_vtxbuf_from_gpu(ivar+i) = merge(1,0,loptest(read_from_gpu))
