@@ -465,6 +465,7 @@
        !   df(l1:l2,m,n,ilnrho)  = df(l1:l2,m,n,ilnrho)  - div_dens_sgs
        ! endif
       endif
+      if (ltraining) call calc_diagnostics_training(f)
 
     endsubroutine dt_sgs_terms 
 !***************************************************************

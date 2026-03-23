@@ -65,7 +65,6 @@
     integer, parameter :: n_subroutines=40
     integer, parameter :: n_special_modules_max=2
 !
-    integer :: n_special_modules
     character(LEN=256) :: special_modules_list = ''
     character(LEN=30), dimension(n_subroutines) :: special_subroutines=(/ &
                            'register_special              ', &
@@ -200,6 +199,7 @@
       integer :: i
 !
       do i=1,n_special_modules
+         special_module_index=i
         call caller1(special_sub_handles(i,I_INITIALIZE_SPECIAL),f)
       enddo
 !
@@ -323,7 +323,15 @@
 !
       integer :: i
 !
+!
       call special_calc_3par(f,df,p,I_DSPECIAL_DT)
+      do i=1,n_special_modules
+        if(lsubstepping_in_time .eqv. lspecial_substepped(i)) then
+          call caller3(special_sub_handles(i,I_DSPECIAL_DT),f,df,p)
+        endif
+      enddo
+!
+    endsubroutine special_calc_3par
 
     endsubroutine dspecial_dt
 !****************************************************************************

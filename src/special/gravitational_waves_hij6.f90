@@ -107,6 +107,7 @@ module Special
   logical :: lremove_mean_hij=.false., lremove_mean_gij=.false.
   real, dimension(3,3) :: ij_table
   real :: c_light2=1.
+  logical :: lsubstepped_in_time=.false.
 !
 ! input parameters
   namelist /special_init_pars/ &
@@ -122,7 +123,8 @@ module Special
     diffhh, diffgg, lsame_diffgg_as_hh, ldebug_print, lswitch_sign_e_X, &
     diffhh_hyper3, diffgg_hyper3, nscale_factor_conformal, tshift, cc_light, &
     lStress_as_aux, lkinGW, aux_stress, &
-    lggTX_as_aux, lhhTX_as_aux, lremove_mean_hij, lremove_mean_gij
+    lggTX_as_aux, lhhTX_as_aux, lremove_mean_hij, lremove_mean_gij,&
+    lsubstepped_in_time
 !
 ! Diagnostic variables (needs to be consistent with reset list below).
 !
@@ -171,8 +173,8 @@ module Special
       if (lroot) call svn_id( &
            "$Id$")
 !
-      call farray_register_pde('hij',ihij,array=6)
-      call farray_register_pde('gij',igij,array=6)
+      call farray_register_pde('hij',ihij,array=6,lsubstepped=lsubstepped_in_time)
+      call farray_register_pde('gij',igij,array=6,lsubstepped=lsubstepped_in_time)
 !
 !  Register ggT and ggX as auxiliary arrays
 !  May want to do this only when Fourier transform is enabled.
@@ -291,6 +293,7 @@ module Special
 !         'cs0 should probably not be unity')
 !
       call keep_compiler_quiet(f)
+      lspecial_substepped(special_module_index) = lsubstepped_in_time
 !
     endsubroutine initialize_special
 !***********************************************************************
@@ -516,21 +519,8 @@ module Special
        endif
     endsubroutine calc_diagnostics_special
 !***********************************************************************
-    subroutine dspecial_dt(f,df,p)
-!
-!  calculate right hand side of ONE OR MORE extra coupled PDEs
-!  along the 'current' Pencil, i.e. f(l1:l2,m,n) where
-!  m,n are global variables looped over in equ.f90
-!
-!  Due to the multi-step Runge Kutta timestepping used one MUST always
-!  add to the present contents of the df array.  NEVER reset it to zero.
-!
-!  Several precalculated Pencils of information are passed for
-!  efficiency.
-!
-!  06-oct-03/tony: coded
-!  07-feb-18/axel: added nscale_factor=0 (no expansion), =.5 (radiation era)
-!
+    subroutine advance_hij(f,df,p)
+
       use Sub, only: del2, del6
 !
       real, dimension (mx,my,mz,mfarray) :: f
@@ -544,10 +534,6 @@ module Special
 !
       intent(in) :: p
       intent(inout) :: f,df
-!
-!  Identify module and boundary conditions.
-!
-      if (headtt.or.ldebug) print*,'dspecial_dt: SOLVE dspecial_dt'
 !
 !  Compute scale factor.
 !  Note: to prevent division by zero, it is best to put tstart=1. in start.in.
@@ -563,6 +549,7 @@ module Special
       !stress_prefactor2=stress_prefactor/scale_factor**3
 !AB: correction of Sept 28, 2018
       stress_prefactor2=stress_prefactor/scale_factor
+!
 !
 !  Assemble rhs of GW equations.
 !
@@ -619,6 +606,38 @@ module Special
 !  enddo from do ij=1,6
 !
       enddo
+    endsubroutine advance_hij
+!***********************************************************************
+    subroutine dspecial_dt(f,df,p)
+!
+!  calculate right hand side of ONE OR MORE extra coupled PDEs
+!  along the 'current' Pencil, i.e. f(l1:l2,m,n) where
+!  m,n are global variables looped over in equ.f90
+!
+!  Due to the multi-step Runge Kutta timestepping used one MUST always
+!  add to the present contents of the df array.  NEVER reset it to zero.
+!
+!  Several precalculated Pencils of information are passed for
+!  efficiency.
+!
+!  06-oct-03/tony: coded
+!  07-feb-18/axel: added nscale_factor=0 (no expansion), =.5 (radiation era)
+!
+!
+      real, dimension (mx,my,mz,mfarray) :: f
+      real, dimension (mx,my,mz,mvar) :: df
+      type (pencil_case) :: p
+!
+!
+      intent(in) :: p
+      intent(inout) :: f,df
+!
+!  Identify module and boundary conditions.
+!
+      if (headtt.or.ldebug) print*,'dspecial_dt: SOLVE dspecial_dt'
+      if (lsubstepped_in_time .neqv. lsubstepping_in_time) return
+
+      call advance_hij(f,df,p)
 !
 !  timestep constraint
 !

@@ -74,11 +74,8 @@ module Timestep
 !
     endsubroutine initialize_timestep
 !***********************************************************************
-    subroutine time_step(f,df,p)
-!
-!   2-apr-01/axel: coded
-!  14-sep-01/axel: moved itorder to cdata
-!
+    subroutine advance_substep(f,df,p,n_advancement,dt_)
+
       use Boundcond, only: update_ghosts
       use BorderProfiles, only: border_quenching
       use Equ, only: pde, impose_floors_ceilings
@@ -92,41 +89,18 @@ module Timestep
       use Sub, only: set_dt, shift_dt
       use GPU, only: update_after_substep_gpu, split_update_gpu
       use Mpicomm, only: mpiwtime
-!
+
       real, dimension (mx,my,mz,mfarray) :: f
       real, dimension (mx,my,mz,mvar) :: df
       real :: start_time
       type (pencil_case) :: p
       real :: ds, dtsub
-!
-!  dt_beta_ts may be needed in other modules (like Dustdensity) for fixed dt.
-!
-! ==============  the following should be omitted at some point =============
-!  There is also an option to advance the time in progressively smaller
-!  fractions of the current time. This is used to model the end of inflation,
-!  when lfractional_tstep_negative should be used.
-!  If dt=.5 and tstart=20, then one has -20, -10, -5, -2.5, etc.
-!  From radiation era onward, lfractional_tstep_positive should be used
-!  to make sure the dt used in run.in is positive.
-!
-      if (.not. ldt) then
-  !     if (lfractional_tstep_advance) then
-  !       if (lfractional_tstep_negative) then
-  !         dt_beta_ts=-dt*t
-  !       else
-  !         dt_beta_ts=dt*t
-  !       endif
-  !     else
-          dt_beta_ts=dt*beta_ts
-  !     endif
-      endif
-! ==================  until here =========================================
-!
-!  Set up df and ds for each time sub.
-!
-      do itsub=1,itorder
+      integer :: n_advancement
 
-        lfirst=(itsub==1)
+      real, optional :: dt_
+      real :: dt_used
+
+        lfirst=(itsub==1 .and. n_advancement == 1)
         llast=(itsub==itorder)
 
         headtt = headt .and. lfirst .and. lroot
@@ -160,14 +134,20 @@ module Timestep
 !
         call pde(f,df,p)
 
+        if(present(dt_)) then
+          dt_used = dt_
+        else
+          dt_used = dt
+        endif
+
         if (lode) call ode
 
         ds=ds+1.0
 !
 !  Calculate dt_beta_ts.
 !
-        if (ldt) dt_beta_ts=dt*beta_ts
-        if (ip<=6) print*, 'time_step: iproc, dt=', iproc_world, dt  !(all have same dt?)
+        if (ldt) dt_beta_ts=dt_used*beta_ts
+        if (ip<=6) print*, 'time_step: iproc, dt=', iproc_world, dt_used  !(all have same dt?)
         dtsub = ds * dt_beta_ts(itsub)
 !
 !  Apply border quenching.
@@ -221,7 +201,74 @@ module Timestep
 !
         t = t + dtsub
 !
-      enddo   ! substep loop
+    endsubroutine advance_substep
+!***********************************************************************
+    subroutine time_step(f,df,p)
+!
+!   2-apr-01/axel: coded
+!  14-sep-01/axel: moved itorder to cdata
+!
+      use GPU, only: split_update_gpu
+      use Equ, only: pde
+!
+      real, dimension (mx,my,mz,mfarray) :: f
+      real, save, allocatable, dimension (:,:,:,:) :: f_substepping_copy
+      real, dimension (mx,my,mz,mvar) :: df
+      type (pencil_case) :: p
+      real :: t_start
+      integer :: i
+      logical :: headt_save
+
+!
+!  dt_beta_ts may be needed in other modules (like Dustdensity) for fixed dt.
+!
+! ==============  the following should be omitted at some point =============
+!  There is also an option to advance the time in progressively smaller
+!  fractions of the current time. This is used to model the end of inflation,
+!  when lfractional_tstep_negative should be used.
+!  If dt=.5 and tstart=20, then one has -20, -10, -5, -2.5, etc.
+!  From radiation era onward, lfractional_tstep_positive should be used
+!  to make sure the dt used in run.in is positive.
+!
+      if (.not. ldt) then
+  !     if (lfractional_tstep_advance) then
+  !       if (lfractional_tstep_negative) then
+  !         dt_beta_ts=-dt*t
+  !       else
+  !         dt_beta_ts=dt*t
+  !       endif
+  !     else
+          dt_beta_ts=dt*beta_ts
+  !     endif
+      endif
+! ==================  until here =========================================
+!
+      t_start = t
+      headt_save = headt
+!
+!  Chosen terms are advanced more finely in time while keeping other terms constant
+!
+      if(number_of_substeps_per_timestep > 0) then
+        headt = .false.
+        lsubstepping_in_time=.true.
+        lfirst=.true.
+        call pde(f,df,p)
+        do i=1,number_of_substeps_per_timestep
+          do itsub=1,itorder
+            call advance_substep(f,df,p,i,dt/number_of_substeps_per_timestep)
+          enddo
+        enddo
+        lsubstepping_in_time=.false.
+        headt = headt_save
+      endif
+
+      t = t_start
+!
+!  Set up df and ds for each time sub.
+!
+      do itsub=1,itorder
+        call advance_substep(f,df,p,1)
+      enddo
 !
 !  Integrate operator split terms.
 !

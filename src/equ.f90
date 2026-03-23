@@ -115,9 +115,9 @@ module Equ
 !  Initialize counter for calculating and communicating print results.
 !  Do diagnostics only in the first of the itorder substeps.
 !
-      ldiagnos   =lfirst.and.lout
-      l1davgfirst=lfirst.and.l1davg
-      l2davgfirst=lfirst.and.l2davg
+      ldiagnos   =lfirst .and. lout  
+      l1davgfirst=lfirst .and. l1davg
+      l2davgfirst=lfirst .and. l2davg
 
 !
 !  Derived diagnostics switches.
@@ -404,7 +404,7 @@ module Equ
       !TP: Update diagnostics controls which is done earlier when multithreading.
       !    I believe at least itdiagnos and dtdiagnos could be eliminated but not 
       !    worth the effort right now
-      if (.not. lmultithread .and. lfirst) then
+      if (.not. lsubstepping_in_time .and. .not. lmultithread .and. lfirst) then
         tdiagnos  = t
         itdiagnos = it
         dtdiagnos = dt
@@ -1154,6 +1154,186 @@ module Equ
 
     endsubroutine timestep_diagnostics
 !***********************************************************************
+    subroutine calc_time_integrals(f,p)
+
+      use Hydro,    only: time_integrals_hydro
+      use Magnetic, only: time_integrals_magnetic
+
+      real, dimension (mx,my,mz,mfarray),intent(INOUT) :: f
+      type (pencil_case)                ,intent(IN) :: p
+
+      if (ltime_integrals.and.llast) then
+        if (lhydro)    call time_integrals_hydro(f,p)
+        if (lmagnetic) call time_integrals_magnetic(f,p)
+      endif
+    endsubroutine calc_time_integrals
+!***********************************************************************
+    subroutine calc_df_diagnostics(df,p)
+
+      use Hydro,    only: df_diagnos_hydro
+      use Magnetic, only: df_diagnos_magnetic
+
+      real, dimension (mx,my,mz,mvar),intent(IN) :: df
+      type (pencil_case)                ,intent(IN) :: p
+
+      if (ldiagnos) then
+        if (lhydro) call df_diagnos_hydro(df,p)
+        if (lmagnetic) call df_diagnos_magnetic(df,p)
+      endif
+    endsubroutine calc_df_diagnostics
+!***********************************************************************
+    subroutine calc_all_rhs(f,df,p)
+
+      use Ascalar
+      use Chiral
+      use Chemistry
+      use Cosmicray
+      use CosmicrayFlux
+      use Density
+      use Dustvelocity
+      use Dustdensity
+      use Energy
+      use EquationOfState
+      use Gravity
+      use Heatflux
+      use Hydro
+      use Lorenz_gauge
+      use Magnetic
+      use NeutralDensity
+      use NeutralVelocity
+      use Particles_main
+      use Pscalar
+      use PointMasses
+      use Polymer
+      use Radiation
+      use Selfgravity
+      use Shear
+      use Special, only: dspecial_dt
+      use Testfield
+      use Testflow
+      use Testscalar
+
+      real, dimension (mx,my,mz,mfarray),intent(INOUT) :: f
+      real, dimension (mx,my,mz,mvar)   ,intent(INOUT) :: df
+      type (pencil_case)                ,intent(INOUT) :: p
+
+!  hydro, density, and entropy evolution
+!  Note that pressure gradient is added in denergy_dt of noentropy to momentum,
+!  even if lentropy=.false.
+!
+        if (.not. lsubstepping_in_time) then
+          call duu_dt(f,df,p)
+          call dlnrho_dt(f,df,p)
+          call denergy_dt(f,df,p)
+!
+!  Magnetic field evolution
+!
+          if (lmagnetic) call daa_dt(f,df,p)
+!
+!  Lorenz gauge evolution
+          if (llorenz_gauge) call dlorenz_gauge_dt(f,df,p)
+!
+!  Polymer evolution
+!
+          if (lpolymer) call dpoly_dt(f,df,p)
+!
+!  Testscalar evolution
+!
+          if (ltestscalar) call dcctest_dt(f,df,p)
+!
+!  Testfield evolution
+!
+          if (ltestfield) call daatest_dt(f,df,p)
+!
+!  Testflow evolution
+!
+          if (ltestflow) call duutest_dt(f,df,p)
+!
+!  Passive scalar evolution
+!
+          if (lpscalar) call dlncc_dt(f,df,p)
+!
+!  Supersaturation evolution
+
+          if (lascalar) call dacc_dt(f,df,p)
+!
+!  Dust evolution
+!
+          if (ldustvelocity) call duud_dt(f,df,p)
+          if (ldustdensity) call dndmd_dt(f,df,p)
+!
+!  Neutral evolution
+!
+          if (lneutraldensity) call dlnrhon_dt(f,df,p)
+          if (lneutralvelocity) call duun_dt(f,df,p)
+!
+!  Gravity
+!
+          if (lgrav) call addgravity(df,p)
+!
+!  Self-gravity
+!
+          if (lselfgravity) call addselfgrav(df,p)
+!
+!  Cosmic ray energy density
+!
+          if (lcosmicray) call decr_dt(f,df,p)
+!
+!  Cosmic ray flux
+!
+          if (lcosmicrayflux) call dfcr_dt(f,df,p)
+!
+!  Chirality of left and right handed aminoacids
+!
+          if (lchiral) call dXY_chiral_dt(f,df,p)
+!
+!  Evolution of chemical species
+!
+          if (lchemistry) call dchemistry_dt(f,df,p)
+!
+!  Evolution of heatflux vector
+!
+          if (lheatflux) call dheatflux_dt(f,df,p)
+!
+!  Add radiative cooling and radiative pressure (for ray method)
+!
+          if (lradiation_ray.and.lenergy) call dradiation_dt(f,df,p)
+        endif
+!
+!  Add and extra 'special' physics
+!
+        if (lspecial) call dspecial_dt(f,df,p)
+!
+!  Find diagnostics related to solid cells (e.g. drag and lift).
+!  Integrating to the full result is done after loops over m and n.
+!
+        if (lsolid_cells) call dsolid_dt(f,df,p)
+!
+!  Add shear if present
+!
+        if (lshear) call shearing(f,df,p)
+!
+        if (lparticles) call particles_pde_pencil(f,df,p)
+!
+        if (lpointmasses) call pointmasses_pde_pencil(f,df,p)
+
+        if(ltraining) call dt_sgs_terms(f,df)
+    endsubroutine calc_all_rhs
+!***********************************************************************
+    subroutine calc_phisums(p)
+
+      use Diagnostics, only: phisum_mn_name_rz
+
+      type (pencil_case)                ,intent(IN) :: p
+
+      if (l2davgfirst) then
+        call phisum_mn_name_rz(p%rcyl_mn,idiag_rcylmphi)
+        call phisum_mn_name_rz(p%phi_mn,idiag_phimphi)
+        call phisum_mn_name_rz(p%z_mn,idiag_zmphi)
+        call phisum_mn_name_rz(p%r_mn,idiag_rmphi)
+      endif
+    endsubroutine
+!***********************************************************************
     subroutine rhs_cpu(f,df,p,mass_per_proc,early_finalize)
 !
 !  Calculates rhss of the PDEs.
@@ -1168,7 +1348,6 @@ module Equ
       use Cosmicray
       use CosmicrayFlux
       use Density
-      use Diagnostics
       use Dustvelocity
       use Dustdensity
       use Energy
@@ -1272,136 +1451,21 @@ module Equ
 !  NO CALLS MODIFYING PENCIL_CASE PENCILS BEYOND THIS POINT
 !  --------------------------------------------------------
 !
-!  hydro, density, and entropy evolution
-!  Note that pressure gradient is added in denergy_dt of noentropy to momentum,
-!  even if lentropy=.false.
-!
-        call duu_dt(f,df,p)
-        call dlnrho_dt(f,df,p)
-        call denergy_dt(f,df,p)
-!
-!  Magnetic field evolution
-!
-        if (lmagnetic) call daa_dt(f,df,p)
-!
-!  Lorenz gauge evolution
-        if (llorenz_gauge) call dlorenz_gauge_dt(f,df,p)
-!
-!  Polymer evolution
-!
-        if (lpolymer) call dpoly_dt(f,df,p)
-!
-!  Testscalar evolution
-!
-        if (ltestscalar) call dcctest_dt(f,df,p)
-!
-!  Testfield evolution
-!
-        if (ltestfield) call daatest_dt(f,df,p)
-!
-!  Testflow evolution
-!
-        if (ltestflow) call duutest_dt(f,df,p)
-!
-!  Passive scalar evolution
-!
-        if (lpscalar) call dlncc_dt(f,df,p)
-!
-!  Supersaturation evolution
-
-        if (lascalar) call dacc_dt(f,df,p)
-!
-!  Dust evolution
-!
-        if (ldustvelocity) call duud_dt(f,df,p)
-        if (ldustdensity) call dndmd_dt(f,df,p)
-!
-!  Neutral evolution
-!
-        if (lneutraldensity) call dlnrhon_dt(f,df,p)
-        if (lneutralvelocity) call duun_dt(f,df,p)
-!
-!  Gravity
-!
-        if (lgrav) call addgravity(df,p)
-!
-!  Self-gravity
-!
-        if (lselfgravity) call addselfgrav(df,p)
-!
-!  Cosmic ray energy density
-!
-        if (lcosmicray) call decr_dt(f,df,p)
-!
-!  Cosmic ray flux
-!
-        if (lcosmicrayflux) call dfcr_dt(f,df,p)
-!
-!  Chirality of left and right handed aminoacids
-!
-        if (lchiral) call dXY_chiral_dt(f,df,p)
-!
-!  Evolution of chemical species
-!
-        if (lchemistry) call dchemistry_dt(f,df,p)
-!
-!  Evolution of heatflux vector
-!
-        if (lheatflux) call dheatflux_dt(f,df,p)
-!
-!  Continuous forcing diagonstics.
-!
-        if (lforcing_cont) call calc_diagnostics_forcing(p)
-!
-!  Add and extra 'special' physics
-!
-        if (lspecial) call dspecial_dt(f,df,p)
-!
-!  Add radiative cooling and radiative pressure (for ray method)
-!
-        if (lradiation_ray.and.lenergy) call dradiation_dt(f,df,p)
-!
-!  Find diagnostics related to solid cells (e.g. drag and lift).
-!  Integrating to the full result is done after loops over m and n.
-!
-        if (lsolid_cells) call dsolid_dt(f,df,p)
-!
-!  Add shear if present
-!
-        if (lshear) call shearing(f,df,p)
-!
-        if (lparticles) call particles_pde_pencil(f,df,p)
-!
-        if (lpointmasses) call pointmasses_pde_pencil(f,df,p)
-
-        if(ltraining) call dt_sgs_terms(f,df)
-
-        if (ltraining) call calc_diagnostics_training(f)
+        call calc_all_rhs(f,df,p)
 !
 !  Call diagnostics that involves the full right hand side
 !  This must be done at the end of all calls that might modify df.
 !
-        if (ldiagnos) then
-          if (lhydro) call df_diagnos_hydro(df,p)
-          if (lmagnetic) call df_diagnos_magnetic(df,p)
-        endif
+        call calc_df_diagnostics(df,p)
 !
 !  General phiaverage quantities -- useful for debugging.
 !  MR: Results are constant in time, so why here?
 !
-        if (l2davgfirst) then
-          call phisum_mn_name_rz(p%rcyl_mn,idiag_rcylmphi)
-          call phisum_mn_name_rz(p%phi_mn,idiag_phimphi)
-          call phisum_mn_name_rz(p%z_mn,idiag_zmphi)
-          call phisum_mn_name_rz(p%r_mn,idiag_rmphi)
-        endif
+        call calc_phisums(p)
 !
 !  Do the time integrations here, before the pencils are overwritten.
 !
-        if (ltime_integrals.and.llast) then
-          if (lhydro)    call time_integrals_hydro(f,p)
-          if (lmagnetic) call time_integrals_magnetic(f,p)
-        endif
+        call calc_time_integrals(f,p)
 
         call set_dt1_max(p)
         call timestep_diagnostics
