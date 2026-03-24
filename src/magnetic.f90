@@ -2279,6 +2279,7 @@ module Magnetic
         case ('zero', '0'); f(:,:,:,iax:iaz) = 0.0
         case ('rescale'); f(:,:,:,iax:iaz)=amplaa(j)*f(:,:,:,iax:iaz)
         case ('tanhxy'); call tanh_hyperbola(amplaa(j),f,iaa,sheet_position,sheet_thickness,sheet_hyp)
+        case ('sech2x'); call sech2x(amplaa(j),f,iaa,sheet_thickness)
         case ('exponential'); call exponential(amplaa(j),f,iaa,kz_aa(j))
         case ('bsiny'); call acosy(amplaa(j),f,iaa,ky_aa(j))
         case ('mode'); call modev(amplaa(j),coefaa,f,iaa,kx_aa(j),ky_aa(j),kz_aa(j))

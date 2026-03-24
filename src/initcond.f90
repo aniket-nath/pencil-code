@@ -23,7 +23,7 @@ module Initcond
   public :: soundwave,sinwave,sinwave_phase,coswave,coswave_phase,cos_cos_sin
   public :: hatwave
   public :: acosy
-  public :: sph_constb,tanh_hyperbola
+  public :: sph_constb,tanh_hyperbola,sech2x
   public :: gaunoise, posnoise, posnoise_rel
   public :: gaunoise_rprof
   public :: gaussian, gaussian3d, gaussianpos
@@ -7850,6 +7850,23 @@ module Initcond
           enddo
         enddo
 
+!
+    endsubroutine
+!***********************************************************************
+    subroutine sech2x(amp,f,ix,width)
+!
+!  initial vector potential for tearing instability
+!
+!  23 Mar 2026/vinay.kumar
+!
+      real, dimension (mx,my,mz,mfarray) :: f
+      real :: amp,width
+      integer, intent(in) :: ix
+      integer :: m,l
+      real, parameter :: A0 = 1.29903871135
+      f(:,:,:,ix)   = 0.
+      f(:,:,:,ix+1) = 0.
+      f(:,:,:,ix+2) = spread(spread(A0*width*amp/(cosh(x/width)**2),2,my),3,mz)
 !
     endsubroutine
 !***********************************************************************
