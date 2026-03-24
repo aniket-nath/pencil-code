@@ -1336,7 +1336,7 @@ module Dustvelocity
       real, dimension (mx,my,mz,mvar) :: df
       type (pencil_case) :: p
 !
-      integer :: k,i
+      integer :: k,iix
 !
       intent(in) :: f
       intent(inout) :: p
@@ -1359,21 +1359,20 @@ module Dustvelocity
 !
         call get_stoppingtime(p%uud(:,:,k),p%uu,p%rho,p%cs2,p%rhod(:,k),k)
 !
-        !TP: any operation across a pencil cannot be translated to the GPU
-        if (ldustvelocity_shorttausd .and. any(tausd1(:,k)>=shorttaus1limit)) then
+!  Loop over all x is needed as condition for short stopping time approximation depends on position.
+!
+        do iix=1,nx
+          if (ldustvelocity_shorttausd .and. tausd1(iix,k)>=shorttaus1limit) then
 !
 !  Short stopping time approximation.
 !  Calculated from master equation d(wx-ux)/dt = A + B*(wx-ux) = 0.
 !
-          do i=1,nx
-            call short_stopping_time_approximation(f,df,p,k,i)
-            !p%advec_uud(i,k)=0.   !MR: this should be done, as there is no advection where this appr. is applied
-          enddo                    !    changes results, though
-        else
-          do i=1,nx
-            call direct_integration_of_motion(f,df,p,k,i)
-          enddo
-        endif
+            call short_stopping_time_approximation(f,df,p,k,iix)
+            !p%advec_uud(iix,k)=0.   !MR: this should be done, as there is no advection where this appr. is applied
+          else                       !    changes results, though
+            call direct_integration_of_motion(f,df,p,k,iix)
+          endif
+        enddo
 !
 !  Advective timestep contribution (condition could be narrower as even with dustdensity,
 !                                   there is not always advection).
