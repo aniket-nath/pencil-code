@@ -157,6 +157,7 @@ module Special
   integer :: itorder_GW=1, idt_file_safety=12
   integer :: boost_method=2
   logical :: lsplit_GW_rhs_from_rest_on_gpu=.false.
+  integer :: ntimesteps_per_GW_step=1
 !
 ! input parameters
 !
@@ -197,7 +198,7 @@ module Special
     lnophase_in_stress, llinphase_in_stress, slope_linphase_in_stress, &
     lread_scl_factor_file, t_ini, OmL0, OmM0, idt_file_safety, &
     lconstmod_in_stress, k_in_stress, itorder_GW, lLighthill, &
-    lsplit_GW_rhs_from_rest_on_gpu, &
+    lsplit_GW_rhs_from_rest_on_gpu, ntimesteps_per_GW_step, &
     lread_pulsar !, nbin_angular
 !
 ! Diagnostic variables (needs to be consistent with reset list below).
@@ -1376,10 +1377,21 @@ module Special
       real, dimension(mx,my,mz,mvar), intent(inout) :: df
       real, intent(in) :: dt_
       logical, intent(in) :: llast
+      integer, save :: it_counter=0
+      real, save :: dt_GW=0.0
 !
 !  Compute the transverse part of the stress tensor by going into Fourier space.
 !
-      if (lfirst) call compute_gT_and_gX_from_gij(f,'St')
+
+      if (lfirst) then
+        dt_GW = dt_GW + dt
+        it_counter = it_counter + 1
+        if(it_counter == ntimesteps_per_GW_step) then
+          call compute_gT_and_gX_from_gij(f,'St',dt_GW)
+          dt_GW = 0.0
+          it_counter = 0
+        endif
+      endif
 !
       call keep_compiler_quiet(df)
       call keep_compiler_quiet(dt_)
@@ -2454,7 +2466,7 @@ if (ip < 25 .and. abs(k1) <nx .and. abs(k2) <ny .and. abs(k3) <nz) print*,k1,k2,
 
     endsubroutine get_conjugate_pair_indexes
 !***********************************************************************
-    subroutine solve_and_stress(f,S_T_re,S_T_im,S_X_re,S_X_im)
+    subroutine solve_and_stress(f,S_T_re,S_T_im,S_X_re,S_X_im,dt)
 !   TODO: The name is simply a placeholder since could not come up with a better name
 !
 !  6-jul-25/TP: carved from compute_gT_and_gX_from_gij
@@ -2464,6 +2476,7 @@ if (ip < 25 .and. abs(k1) <nx .and. abs(k2) <ny .and. abs(k3) <nz) print*,k1,k2,
 !
       real, dimension (mx,my,mz,mfarray) :: f
       real, dimension (nx,ny,nz) :: S_T_re,S_T_im,S_X_re,S_X_im
+      real, intent(IN) :: dt
       real, dimension (6) :: Pij=0., kij=0., e_T, e_X, Sij_re, Sij_im, delij=0.
       real, dimension (3) :: e1, e2, kvec
       integer :: i,j,p,q,ik,ikx,iky,ikz,stat,ij,pq,ip,jq,jStress_ij
@@ -3020,7 +3033,7 @@ if (ip < 25 .and. abs(k1) <nx .and. abs(k2) <ny .and. abs(k3) <nz) print*,k1,k2,
       enddo
     endsubroutine solve_and_stress
 !***********************************************************************
-    subroutine compute_gT_and_gX_from_gij(f,label)
+    subroutine compute_gT_and_gX_from_gij(f,label,dt)
 !
 !  Compute the transverse part of the stress tensor by going into Fourier space.
 !  It also allows for the inclusion of nonlinear corrections to the wave equation.
@@ -3039,6 +3052,7 @@ if (ip < 25 .and. abs(k1) <nx .and. abs(k2) <ny .and. abs(k3) <nz) print*,k1,k2,
       integer :: i,j,p,q,ik,ikx,iky,ikz,stat,ij,pq,ip
       intent(inout) :: f
       character (len=2) :: label
+      real :: dt
 !
 !  Check that the relevant arrays are registered
 !
@@ -3175,7 +3189,7 @@ if (ip < 25 .and. abs(k1) <nx .and. abs(k2) <ny .and. abs(k3) <nz) print*,k1,k2,
 !
         call fft_xyz_parallel(Tpq_re(:,:,:,:),Tpq_im(:,:,:,:))
       endif
-      call solve_and_stress(f,S_T_re,S_X_re,S_T_im,S_X_im)
+      call solve_and_stress(f,S_T_re,S_X_re,S_T_im,S_X_im,dt)
 !
 !  back to real space: hTX
 !  re-utilize S_T_re, etc as workspace.
