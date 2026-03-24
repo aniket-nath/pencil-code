@@ -1387,6 +1387,7 @@ module Magnetic
 !   7-jun-16/MR: modifications in z average removal for Yin-Yang, yet inoperational
 !  24-jun-17/MR: moved calculation of clight2_zdep from calc_pencils to initialize
 !  28-feb-18/piyali: moved back the calculation of clight2_zdep to calc_pencils to use va2 pencil
+!  24-mar-26/axel: corrected mask1 so that it works even if only one point is valid.
 !
       use Sub, only: register_report_aux, write_zprof, step, get_smooth_kernel   !, coeff_ydep
       use Magnetic_meanfield, only: initialize_magn_mf
@@ -1452,13 +1453,18 @@ module Magnetic
       if (l1 == l2) then
         xmask_mag = 1.
       else
-        where (      x(l1:l2) >= magnetic_xaver_range(1) &
-               .and. x(l1:l2) <= magnetic_xaver_range(2))
+        !where (      x(l1:l2) >= magnetic_xaver_range(1) &
+        !       .and. x(l1:l2) <= magnetic_xaver_range(2))
+!AB: corrected mask so that it works even if only one point is valid.
+        where (      x(l1:l2) > magnetic_xaver_range(1) &
+               .and. x(l1:l2) < magnetic_xaver_range(2))
           xmask_mag = 1.
+          xmask1_mag = 1.
         elsewhere
           xmask_mag = 0.
+          xmask1_mag = max_real
+          xmask1_mag = 0.
         endwhere
-        xmask1_mag = xmask_mag
         magnetic_xaver_range(1) = max(magnetic_xaver_range(1), xyz0(1))
         magnetic_xaver_range(2) = min(magnetic_xaver_range(2), xyz1(1))
         if (lspherical_coords) then
@@ -6600,7 +6606,7 @@ print*,'AXEL2: should not be here (eta) ... '
       call max_mn_name(p%beta, idiag_betamax)
 
       if (idiag_betamin /= 0) call max_mn_name(-p%beta, idiag_betamin, lneg=.true.)
-      if (idiag_Azmid_min /= 0) call max_mn_name(-p%aa(:,3)*xmask1_mag, idiag_Azmid_min, lneg=.true.)
+      if (idiag_Azmid_min /= 0) call max_mn_name((offset_min_cal-p%aa(:,3))*xmask1_mag, idiag_Azmid_min, lneg=.true.)
       call max_mn_name( p%aa(:,3),idiag_Azmid_max)
 
       if (.not.lmultithread) then

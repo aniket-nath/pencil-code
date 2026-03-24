@@ -858,8 +858,13 @@ module Diagnostics
               if (itype==ilabel_max_dt)         &
                   vname(iname)=fmax(imax_count)
 !
+!  added offset_min_calc (zero by default) to compute positive minima
+!  in the presence of a mask, with maps out zero values.
+!  The value of offset_min_calc, which is now an input parameter,
+!  should not be choosen too large.
+!
               if (itype==ilabel_max_neg)        &
-                  vname(iname)=-fmax(imax_count)
+                  vname(iname)=offset_min_calc-fmax(imax_count)
 !
               if (itype==ilabel_max_reciprocal) then
                 if (fmax(imax_count)==0.) then
