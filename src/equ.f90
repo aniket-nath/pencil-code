@@ -436,6 +436,7 @@ module Equ
     endsubroutine pde
 !***********************************************************************
     subroutine load_variables_to_gpu
+
       use GPU, only: update_on_gpu
 
       use Special, only: load_variables_to_gpu_special
@@ -678,8 +679,7 @@ module Equ
 !$omp parallel if (.not. lsuppress_parallel_reductions) private(p) num_threads(num_helper_threads) &
 !$omp copyin(t,dxmax_pencil,fname,fnamex,fnamey,fnamez,fnamer,fnamexy,fnamexz,fnamerz,fname_keep,fname_sound,ncountsz,phiavg_norm)
 !$    call restore_diagnostic_controls
-
-      
+!      
 !     TP: on some nvfortan compilers copyin does not seem to be enough to ensure diagnostic arrays are allocated
 !     TP: not sure was the copyin ever sufficient, but not that important since we can always explicitly check
 !$    if (.not. allocated(fname)) call allocate_diagnostic_arrays
@@ -762,7 +762,6 @@ module Equ
 !!$      endif
 !!$    enddo
 !$omp barrier
-
 !$omp end parallel   ! all helper threads
 
       endsubroutine calc_all_module_diagnostics
@@ -774,7 +773,7 @@ module Equ
         real, dimension (mx,my,mz,mfarray),intent(INOUT) :: f
 
         !$omp parallel if (.not. lsuppress_parallel_reductions) num_threads(num_helper_threads)
-                call density_before_boundary_diagnostics(f)
+        call density_before_boundary_diagnostics(f)
         !$omp end parallel
 
       endsubroutine calc_all_before_boundary_diagnostics
@@ -782,6 +781,7 @@ module Equ
       subroutine perform_diagnostics(f,p)
 
 !$    use General, only: signal_send
+      !use Slices_methods, only: update_slice_position
       use Special, only: calc_ode_diagnostics_special
       use EquationofState, only: ioncalc
 
@@ -795,7 +795,6 @@ module Equ
         call finalize_diagnostics                 ! by diagmaster (MPI comm.)
         call write_diagnostics(f)                 !       ~
 
-!!$      call signal_send(lhelperflags(PERF_DIAGS),.false.)
 !$      lhelperflags(PERF_DIAGS) = .false.
 
       endsubroutine perform_diagnostics
@@ -983,6 +982,7 @@ module Equ
     endsubroutine check_if_necessary
 !***********************************************************************
     subroutine before_boundary_shared(f)
+
 !  These before_boundaries are shared between CPU and GPU (that e.g. set parameters are done infrequently enough 
 !  to not take a performance hit from moving buffer between host and device)
 !
@@ -995,6 +995,7 @@ module Equ
 
       if (linterstellar) call interstellar_before_boundary(f)
       if (lshear)        call shear_before_boundary(f)
+
     endsubroutine before_boundary_shared
 !***********************************************************************
     subroutine before_boundary_cpu(f)
@@ -1088,7 +1089,6 @@ module Equ
 
       real, intent(INOUT), dimension(mx,my,mz,mfarray) :: f
       real, intent(INOUT), dimension(mx,my,mz,mvar)    :: df
-
 !
 !  Calculate shock profile (simple).
 !
@@ -1125,7 +1125,7 @@ module Equ
 !  Calculation of changing parameters that could happen, e.g. in after_boundary calls 
 !  that we want to happen both on the CPU and GPU should happen here.
 !
-    if (lspecial) call prep_rhs_special
+      if (lspecial) call prep_rhs_special
 
     endsubroutine prep_rhs
 !***********************************************************************
@@ -1166,6 +1166,7 @@ module Equ
         if (lhydro)    call time_integrals_hydro(f,p)
         if (lmagnetic) call time_integrals_magnetic(f,p)
       endif
+
     endsubroutine calc_time_integrals
 !***********************************************************************
     subroutine calc_df_diagnostics(df,p)
@@ -1180,6 +1181,7 @@ module Equ
         if (lhydro) call df_diagnos_hydro(df,p)
         if (lmagnetic) call df_diagnos_magnetic(df,p)
       endif
+
     endsubroutine calc_df_diagnostics
 !***********************************************************************
     subroutine calc_all_rhs(f,df,p)
@@ -1208,6 +1210,7 @@ module Equ
       use Radiation
       use Selfgravity
       use Shear
+      use Solid_Cells, only:  dsolid_dt
       use Special, only: dspecial_dt
       use Testfield
       use Testflow
@@ -1222,6 +1225,7 @@ module Equ
 !  even if lentropy=.false.
 !
         if (.not. lsubstepping_in_time) then
+
           call duu_dt(f,df,p)
           call dlnrho_dt(f,df,p)
           call denergy_dt(f,df,p)
@@ -1231,6 +1235,7 @@ module Equ
           if (lmagnetic) call daa_dt(f,df,p)
 !
 !  Lorenz gauge evolution
+!
           if (llorenz_gauge) call dlorenz_gauge_dt(f,df,p)
 !
 !  Polymer evolution
@@ -1317,7 +1322,8 @@ module Equ
 !
         if (lpointmasses) call pointmasses_pde_pencil(f,df,p)
 
-        if(ltraining) call dt_sgs_terms(f,df)
+        if (ltraining) call dt_sgs_terms(f,df)
+
     endsubroutine calc_all_rhs
 !***********************************************************************
     subroutine calc_phisums(p)
@@ -1332,6 +1338,7 @@ module Equ
         call phisum_mn_name_rz(p%z_mn,idiag_zmphi)
         call phisum_mn_name_rz(p%r_mn,idiag_rmphi)
       endif
+
     endsubroutine
 !***********************************************************************
     subroutine rhs_cpu(f,df,p,mass_per_proc,early_finalize)
@@ -1386,7 +1393,6 @@ module Equ
 !
       lfirstpoint=.true.
       lcommunicate=.not.early_finalize
-
 !
 !  This call is included in the GPU kernels by transpilation
 !
@@ -1818,6 +1824,7 @@ module Equ
 
       if (ldensity.or.lviscosity.or.lmagnetic.or.lenergy.or.ldustvelocity.or.ldustdensity) &
           maxadvec=maxadvec+sqrt(advec2_hypermesh)
+
     endsubroutine calc_maxadvec
 !***********************************************************************
     subroutine set_dt1_max(p)
