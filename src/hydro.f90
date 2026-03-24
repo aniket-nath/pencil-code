@@ -2155,7 +2155,18 @@ module Hydro
           if (abs(TG_A*kx_uu(j) + TG_B*ky_uu(j) + TG_C*kz_uu(j)) > tini) then
                 call fatal_error("init_uu", "For Taylor-Green Vortex TG_A*kx_uu + TG_B*ky_uu + TG_C*kz_uu has to be zero!")
           endif
-
+!
+        case ('TGcut')
+          if (headtt) print*,'Taylor-Green vortex (cut to zero outside)'
+          f(:,:,:,iux:iuz) = 0.0
+! uu
+          do n=n1,n2; do m=m1,m2
+            !if (y(m)>=0. .and. y(m)<=1. .and. z(n)>=-1. .and. z(n)<=1.) then
+            if (y(m)>=-1. .and. y(m)<=1. .and. z(n)>=0. .and. z(n)<=1.) then
+              f(l1:l2,m,n,iuy)=ampluu(j)*cos(pi*(y(m)-.5))*sin(pi*(z(n)-.5))
+              f(l1:l2,m,n,iuz)=ampluu(j)*sin(pi*(y(m)-.5))*cos(pi*(z(n)-.5))
+            endif
+          enddo; enddo
 !
         case ('potential')
           if (headtt) print*,'potential flow'
