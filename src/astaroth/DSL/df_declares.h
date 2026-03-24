@@ -184,3 +184,5 @@ const int AC_itsub__mod__cdata  = step_num+1
 #if LDUSTDENSITY
 reac_dust__mod__cdata = 0.0
 #endif
+
+const bool AC_lsubstepping_in_time__mod__cdata = false

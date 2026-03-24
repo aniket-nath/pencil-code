@@ -1,7 +1,6 @@
 Kernel GW_rhs(real AC_t__mod__cdata,real AC_dt__mod__cdata){
 const int step_num = 0
 const bool AC_lrmv__mod__cdata = false
-const bool AC_lsubstepping_in_time__mod__cdata = false
   #include "rhs.h"
 
   #if LGRAVITATIONAL_WAVES_HTXK
