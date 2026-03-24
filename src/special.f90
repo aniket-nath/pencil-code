@@ -331,8 +331,6 @@
         endif
       enddo
 !
-    endsubroutine special_calc_3par
-
     endsubroutine dspecial_dt
 !****************************************************************************
     subroutine register_particles_special(npvar)
