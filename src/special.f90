@@ -324,7 +324,6 @@
       integer :: i
 !
 !
-      call special_calc_3par(f,df,p,I_DSPECIAL_DT)
       do i=1,n_special_modules
         if(lsubstepping_in_time .eqv. lspecial_substepped(i)) then
           call caller3(special_sub_handles(i,I_DSPECIAL_DT),f,df,p)
