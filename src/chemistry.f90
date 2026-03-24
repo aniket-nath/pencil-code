@@ -322,6 +322,8 @@ module Chemistry
   integer :: i_O2_glob,ichem_O2, i_C3H8_glob,ichem_C3H8
   logical :: lO2, lC3H8
   real    :: mO2, mC3H8
+
+  logical :: lcompute_rhs_y_full = .false.
   contains
 !
 !***********************************************************************
@@ -737,6 +739,10 @@ module Chemistry
     if (lgpu .and. (l1step_test .or. reac_rate_method=='1step_test')) &
           call warning('initialize_chemistry','1step test will not be correct on the GPU')
 
+
+!TP: Based on reading the code RHS_Y_full is only accessed in the NSCBC module so it should be safe to not compute
+!    if the module is not used, no?
+    lcompute_rhs_y_full = lnscbc
     endsubroutine initialize_chemistry
 !***********************************************************************
     subroutine chemistry_allocate_rhs_arrays
@@ -1447,12 +1453,6 @@ module Chemistry
         endif
       else
         p%DYDt_diff = 0.
-      endif
-!
-      if (latmchem) then
-        RHS_Y_full(l1:l2,m,n,:) = p%DYDt_diff
-      else
-        RHS_Y_full(l1:l2,m,n,:) = p%DYDt_reac+p%DYDt_diff
       endif
 !
       if (lpencil(i_cs2) .and. lcheminp) then
@@ -3393,6 +3393,15 @@ module Chemistry
 !
       call timing('dchemistry_dt','entered',mnloop=.true.)
       if (headtt .or. ldebug) print*,'dchemistry_dt: SOLVE dchemistry_dt'
+!
+      if(lcompute_rhs_y_full) then
+        if (latmchem) then
+          RHS_Y_full(l1:l2,m,n,:) = p%DYDt_diff
+        else
+          RHS_Y_full(l1:l2,m,n,:) = p%DYDt_reac+p%DYDt_diff
+        endif
+      endif
+!
 !
 !  Interface for your personal subroutines calls
       !
@@ -7428,6 +7437,7 @@ module Chemistry
     call copy_addr(lc3h8,p_par(129)) ! bool
     call copy_addr(mo2,p_par(130))
     call copy_addr(mc3h8,p_par(131))
+    call copy_addr(lcompute_rhs_y_full,p_par(132))
 
   endsubroutine pushpars2c
 !***********************************************************************
