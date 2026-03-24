@@ -546,9 +546,6 @@ pc_run
 
 Running with GPU acceleration for the first time in a work directory will take significant time ($\lesssim$ 10 minutes) for several preliminary steps before the simulation proper starts. At later (re)starts, this time reduces strongly as long as no input parameters or \command{*.local} settings are changed.
 
-The GPU module has a few parameters in the \code{gpu\_run\_pars} namelist, most relevant:
-\command{lac\_sparse\_autotuning} set to ``T" will accelerate the preliminaries noticeably.
-
 \subsection{Limitations}
 \begin{itemize}
 \item For yet unaccelerated modules, see the exclusion list in \command{gpu\_astaroth.f90, subroutine initialize\_GPU}.\\
