@@ -6606,7 +6606,7 @@ print*,'AXEL2: should not be here (eta) ... '
       call max_mn_name(p%beta, idiag_betamax)
 
       if (idiag_betamin /= 0) call max_mn_name(-p%beta, idiag_betamin, lneg=.true.)
-      if (idiag_Azmid_min /= 0) call max_mn_name((offset_min_cal-p%aa(:,3))*xmask1_mag, idiag_Azmid_min, lneg=.true.)
+      if (idiag_Azmid_min /= 0) call max_mn_name((offset_min_calc-p%aa(:,3))*xmask1_mag, idiag_Azmid_min, lneg=.true.)
       call max_mn_name( p%aa(:,3),idiag_Azmid_max)
 
       if (.not.lmultithread) then
