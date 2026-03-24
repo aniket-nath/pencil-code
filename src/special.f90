@@ -110,6 +110,7 @@
                    /)
 
     integer(KIND=ikind8) :: libhandle
+    integer :: n_special_modules
     integer(KIND=ikind8), dimension(n_special_modules_max,n_subroutines) :: special_sub_handles
     character(LEN=80) :: specific_subroutine
 
@@ -194,6 +195,7 @@
 !
 !  06-oct-03/tony: coded
 !
+      use Cdata, only: special_module_index
       real, dimension (mx,my,mz,mfarray) :: f
 !
       integer :: i
@@ -314,6 +316,8 @@
 !
 !  06-oct-03/tony: coded
 !
+      use Cdata, only: lspecial_substepped, lsubstepping_in_time
+
       real, dimension (mx,my,mz,mfarray) :: f
       real, dimension (mx,my,mz,mvar) :: df
       type (pencil_case) :: p
