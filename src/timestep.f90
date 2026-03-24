@@ -74,7 +74,7 @@ module Timestep
 !
     endsubroutine initialize_timestep
 !***********************************************************************
-    subroutine advance_substep(f,df,p,n_advancement,dt_)
+    subroutine advance_substeps(f,df,p,n_advancement,dt_)
 
       use Boundcond, only: update_ghosts
       use BorderProfiles, only: border_quenching
@@ -100,6 +100,7 @@ module Timestep
       real, optional :: dt_
       real :: dt_used
 
+      do itsub=1,itorder
         lfirst=(itsub==1 .and. n_advancement == 1)
         llast=(itsub==itorder)
 
@@ -200,8 +201,9 @@ module Timestep
 !  Increase time.
 !
         t = t + dtsub
+      enddo
 !
-    endsubroutine advance_substep
+    endsubroutine advance_substeps
 !***********************************************************************
     subroutine time_step(f,df,p)
 !
@@ -253,9 +255,7 @@ module Timestep
         call pde(f,df,p)
         lsubstepping_in_time=.true.
         do i=1,number_of_substeps_per_timestep
-          do itsub=1,itorder
-            call advance_substep(f,df,p,i,dt/number_of_substeps_per_timestep)
-          enddo
+          call advance_substeps(f,df,p,i,dt/number_of_substeps_per_timestep)
         enddo
         lsubstepping_in_time=.false.
         headt = headt_save
@@ -265,9 +265,7 @@ module Timestep
 !
 !  Set up df and ds for each time sub.
 !
-      do itsub=1,itorder
-        call advance_substep(f,df,p,1)
-      enddo
+      call advance_substeps(f,df,p,1)
 !
 !  Integrate operator split terms.
 !
