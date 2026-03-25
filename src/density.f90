@@ -137,6 +137,7 @@ module Density
   real :: density_ceiling=-1.
   logical :: lreinitialize_lnrho=.false., lreinitialize_rho=.false.
   logical :: lsubtract_init_stratification=.false., lwrite_stratification=.false.
+  logical :: lpress_equil_uu=.false.   !PAR_DOC: adjust lnrho so that .5*u2+cs2*lnrho=const.
   real, dimension(:), allocatable :: rhobar
   character (len=fnlen) :: rhobar_file
   character (len=labellen), dimension(ninit) :: initlnrho='nothing' !PAR_DOC:
@@ -205,7 +206,7 @@ module Density
       ieos_profile, width_eos_prof, kpeak_lnrho, initpower_lnrho, cutoff_lnrho, &
       lconserve_total_mass, total_mass, ireference_state, lrho_flucz_as_aux,&
       ldensity_linearstart, xjump_mid, yjump_mid, zjump_mid, lscale_tobox_lnrho, &
-      lrelativistic_eos_term1, lrelativistic_eos_term2
+      lrelativistic_eos_term1, lrelativistic_eos_term2, lpress_equil_uu
 !
   namelist /density_run_pars/ &
       cdiffrho, diffrho, diffrho_hyper3, diffrho_hyper3_mesh, diffrho_shock, &
@@ -1110,12 +1111,12 @@ module Density
       use Gravity, only: zref,z1,z2,gravz,nu_epicycle,potential
       use Initcond
       use Mpicomm
-      use Sub, only: blob
+      use Sub, only: blob, dot2_mn
       use InitialCondition, only: initial_condition_lnrho
       use SharedVariables, only: get_shared_variable
 !
       real, dimension (mx,my,mz,mfarray) :: f
-      real, dimension (nx) :: pot,prof
+      real, dimension (nx) :: pot, prof, tmp
       real, dimension (ninit) :: lnrho_left,lnrho_right
       real :: lnrhoint,cs2int,pot0
       real :: pot_ext,lnrho_ext,cs2_ext,tmp1,k_j2
@@ -1788,6 +1789,23 @@ module Density
       if (linitial_condition) call initial_condition_lnrho(f)
 !
       if (lnothing.and.lroot) print*,'init_lnrho: nothing'
+!
+!  Allow for dynamical pressure equilibrium.
+!
+      if (lpress_equil_uu) then
+        call get_gamma_etc(gamma)
+        if (lroot) print*,'init_uu: adjust lnrho to have pressure equilib; cs20,gamma=',cs20,gamma
+        if (gamma==1.0) then
+          do n=n1,n2
+          do m=m1,m2
+            call dot2_mn(f(l1:l2,m,n,iux:iuz),tmp)
+            f(l1:l2,m,n,ilnrho)=f(l1:l2,m,n,ilnrho)-.5*tmp/cs20
+          enddo
+          enddo
+        else
+          call fatal_error("init_uu","lpress_equil_uu works currently only for gamma=1")
+        endif
+      endif
 !
 !  check that cs2bot,cs2top are ok
 !  for runs with ionization or fixed ionization, don't print them
