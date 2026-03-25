@@ -602,8 +602,19 @@ module PointMasses
         positions(  iprimary,2)=pi
 !
         do k=1,nqpar
-          !if (ipar(k) <= nqpar) then
-            fq(k,ixq:izq) = positions(k,1:3)
+           ! the positions are in cylindrical coordinates
+           !if (ipar(k) <= nqpar) then
+           if (lcartesian_coords) then
+              fq(k,ixq) = positions(k,1)*cos(positions(k,2)) != r_cyl*cos(phi)
+              fq(k,iyq) = positions(k,1)*sin(positions(k,2)) != r_cyl*sin(phi)
+              fq(k,izq) = positions(k,3)                     != z
+           elseif (lcylindrical_coords) then 
+              fq(k,ixq:izq) = positions(k,1:3)
+           elseif (lspherical_coords) then
+              fq(k,ixq) = sqrt(positions(k,1)**2 + positions(k,3)**2)  ! = sqrt(r_cyl^2+z^2)
+              fq(k,iyq) = acos(positions(k,3)/fq(k,ixq))               ! = acos(z/r_sph)
+              fq(k,izq) = positions(k,2)                               ! = phi (same as cylindric)
+           endif
           !endif
         enddo
 !
@@ -719,7 +730,22 @@ module PointMasses
 !  Loop through particles to allocate the velocities.
 !
         do k=1,nqpar
-          fq(k,ivxq:ivzq) = velocity(k,1:3)
+           if (lcartesian_coords) then
+              !vr*cos(phi)-vphi*sin(phi)
+              fq(k,ivxq) = velocity(k,1)*cos(fq(k,iyq)) - velocity(k,2)*sin(fq(k,iyq))
+              !vr*sin(phi)+vphi*cos(phi)
+              fq(k,ivxq) = velocity(k,1)*sin(fq(k,iyq)) + velocity(k,2)*cos(fq(k,iyq))
+              fq(k,ivzq) = velocity(k,3)
+           elseif (lcylindrical_coords) then 
+              fq(k,ivxq:ivzq) = velocity(k,1:3)
+           elseif (lspherical_coords) then
+              !vr*sin(phi)+vz*cos(phi)
+              fq(k,ivxq) = velocity(k,1)*sin(fq(k,iyq)) + velocity(k,3)*cos(fq(k,iyq))
+              !vr*cos(phi)-vz*sin(phi)
+              fq(k,ivxq) = velocity(k,1)*cos(fq(k,iyq)) - velocity(k,3)*sin(fq(k,iyq))
+              !vphi
+              fq(k,ivzq) = velocity(k,2)
+           endif
         enddo
 !
       case default
