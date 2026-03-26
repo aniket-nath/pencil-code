@@ -981,7 +981,7 @@ sub setup_datadir {
 # ---------------------------------------------------------------------- #
 sub subdir_list {
 # Return list of directories below data/ that must exist
-    my @subdirs = qw| allprocs allprocs/signals verages idl signals |;
+    my @subdirs = qw| allprocs allprocs/signals averages idl signals |;
     my $HDF5 = `grep -Eci '^ *io *= *io_hdf5' src/Makefile.local`;
     my $MPIIO = `grep -Ec '^ *IO *= *io_mpi2' src/Makefile.local`;
     if ($HDF5 > 0) {
