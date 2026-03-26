@@ -981,7 +981,7 @@ sub setup_datadir {
 # ---------------------------------------------------------------------- #
 sub subdir_list {
 # Return list of directories below data/ that must exist
-    my @subdirs = qw/ allprocs averages idl /;
+    my @subdirs = qw| allprocs allprocs/signals verages idl signals |;
     my $HDF5 = `grep -Eci '^ *io *= *io_hdf5' src/Makefile.local`;
     my $MPIIO = `grep -Ec '^ *IO *= *io_mpi2' src/Makefile.local`;
     if ($HDF5 > 0) {
@@ -1568,8 +1568,16 @@ sub unlink_if_exist {
 
     my @existing_files = grep { -e } @files;
     if (@existing_files) {
-        unlink @existing_files
-          or die "Cannot remove all of @existing_files\n";
+	foreach my $file_path (@existing_files) {
+	  if(-d $file_path)
+	  {
+            remove_tree($file_path) or die "Cannot remove directory $file_path\n";
+	  } else
+	  {
+            unlink $file_path 
+              or die "Cannot remove $file_path\n";
+	  }
+	}
     }
 }
 # ---------------------------------------------------------------------- #

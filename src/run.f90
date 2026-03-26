@@ -299,6 +299,7 @@ endsubroutine helper_loop
   use Filter,          only: rmwig, rmwig_xyaverage
   use Fixed_point,     only: fixed_points_prepare
   use Forcing,         only: addforce
+  use General,         only: touch_file
   use ImplicitPhysics, only: calc_heatcond_ADI
   use IO,              only: output_globals
   use Magnetic,        only: rescaling_magnetic
@@ -559,7 +560,10 @@ endsubroutine helper_loop
 !  and won't be saved!
 !
     if ((it<nt) .and. (dt<dtmin)) then
-      if (lroot) write(*,*) ' Time step has become too short: dt = ', dt
+      if (lroot) then 
+        call touch_file('data/allprocs/signals/TIMESTEP_BECAME_TOO_SHORT')
+        write(*,*) ' Time step has become too short: dt = ', dt
+      endif
       save_lastsnap=.false.
 !$    if (lfarray_copied) call signal_send(lhelper_perf,.true.)
       exit Time_loop
@@ -611,6 +615,28 @@ endsubroutine helper_loop
 !$ lmultithread = .false.
 
   endsubroutine timeloop
+!***********************************************************************
+  subroutine setup_signal_files
+  use File_io,         only: file_exists,delete_file
+  use General,         only: touch_file
+  use Syscalls,        only: sizeof_real
+!
+!  Store metadata was the run in double or single precision
+!  We do this instead of e.g. reading it from dim.dat since dim.dat won't exist
+!  if we use HDF5-IO
+!
+    if(lroot) then
+      if (file_exists('data/allprocs/signals/SINGLE_PRECISION_RUN')) call delete_file('data/allprocs/signals/SINGLE_PRECISION_RUN')
+      if (file_exists('data/allprocs/signals/DOUBLE_PRECISION_RUN')) call delete_file('data/allprocs/signals/DOUBLE_PRECISION_RUN')
+      if(sizeof_real() < 8) then
+        call touch_file('data/allprocs/signals/SINGLE_PRECISION_RUN')
+      else
+        call touch_file('data/allprocs/signals/DOUBLE_PRECISION_RUN')
+      endif
+      if (file_exists('data/allprocs/signals/TIMESTEP_BECAME_TOO_SHORT')) &
+        call delete_file('data/allprocs/signals/TIMESTEP_BECAME_TOO_SHORT')
+    endif
+  endsubroutine setup_signal_files
 !***********************************************************************
   subroutine run_start() bind(C)
 !
@@ -780,20 +806,9 @@ endsubroutine helper_loop
     call construct_grid(x,y,z,dx,dy,dz)
     lprocbounds_exist = .false.    ! triggers wproc_bounds later
   endif
-!
-!  Store metadata was the run in double or single precision
-!  We do this instead of e.g. reading it from dim.dat since dim.dat won't exist
-!  if we use HDF5-IO
-!
-    if(lroot) then
-      if (file_exists('data/SINGLE_PRECISION_RUN')) call delete_file('data/SINGLE_PRECISION_RUN')
-      if (file_exists('data/DOUBLE_PRECISION_RUN')) call delete_file('data/DOUBLE_PRECISION_RUN')
-      if(sizeof_real() < 8) then
-        call touch_file('data/SINGLE_PRECISION_RUN')
-      else
-        call touch_file('data/DOUBLE_PRECISION_RUN')
-      endif
-    endif
+
+
+  call setup_signal_files
 
 !
 !  Shorthands (global).

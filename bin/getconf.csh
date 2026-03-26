@@ -2351,10 +2351,10 @@ endif
 set HDF5=`grep '^ *IO *=' src/Makefile.local | tail -n 1 | grep -Ec '^ *IO *= *io_hdf5'`
 if ($HDF5) then
   set procdirs = ()
-  set subdirs = ("allprocs" "slices" "averages" "idl")
+  set subdirs = ("allprocs" "allprocs/signals" "slices" "averages" "idl")
 else
   set procdirs = `perl -e 'for $i (0..'"$ncpus"'-1) { print "proc$i\n"}'`
-  set subdirs = ("allprocs" "reduced" "averages" "idl")
+  set subdirs = ("allprocs" "allprocs/signals" "reduced" "averages" "idl")
 endif
 
 if ($local_disc) then
