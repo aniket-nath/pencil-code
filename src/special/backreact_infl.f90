@@ -106,7 +106,7 @@ module Special
   real :: echarge=.0, echarge_const=.303
   real :: count_eb0_all=0., rad_heating=0., ascale_heat=0., ascale_heat_off=0., heating
   real :: aphimax=0., aphimax2=0.  !PAR_DOC: maximum a value above which the phi potential is quenched.
-  real :: Gamma_phi0=0., Gamma_phi !PAR_DOC: damping factor for phi above aphimax
+  real :: Gamma_phi0=impossible, Gamma_phi !PAR_DOC: damping factor for phi above aphimax
 !
   real, target :: ddotam_all
   real, pointer :: alpf, eta
@@ -118,6 +118,8 @@ module Special
   logical :: lskip_projection_phi=.false., lvectorpotential=.false., lflrw=.false.
   logical :: lrho_chi=.false., lno_noise_phi=.false., lno_noise_dphi=.false.
   logical :: lrho_rad=.false.            !PAR_DOC: radiation from inflaton decay
+  logical :: lrho_rad_apply=.true.       !PAR_DOC: radiation from inflaton decay, and also applied to df(l1:l2,m,n,iinfl_dphi)
+  logical :: lrho_rad_apply2=.true.       !PAR_DOC: radiation from inflaton decay, and also applied to df(l1:l2,m,n,iinfl_dphi)
   logical :: lrho_chi_corrected=.true.   !PAR_DOC: when false, we use the wrong scale factor in the rho_chi equation
   logical :: lrho_chi_inhom=.false.      !PAR_DOC: inhomogeneous heating
   logical :: ldefine_a2rhophi_with_Vpotential=.true.  !PAR_DOC: define a2rhophi with Vpotential
@@ -137,7 +139,7 @@ module Special
       initpower_dphi, initpower2_dphi, cutoff_dphi, kpeak_dphi, &
       ncutoff_phi, lscale_tobox, Hscript0, Hscript_choice, infl_v, lflrw, &
       lrho_chi, scale_rho_chi_Heqn, scale_rho_rad_Heqn, amplee_BD_prefactor, deriv_prefactor_ee, &
-      lrho_rad, init_rho_rad, &
+      lrho_rad, init_rho_rad, lconf_time, &
       echarge_type, init_rho_chi, rho_chi_init, lrho_chi_inhom
 !
   namelist /special_run_pars/ &
@@ -145,8 +147,8 @@ module Special
       lbackreact_infl, lem_backreact, c_light_axion, lambda_axion, Vprime_choice, &
       lzeroHubble, ldt_backreact_infl, Ndiv, Hscript0, Hscript_choice, infl_v, &
       lflrw, lrho_chi, scale_rho_chi_Heqn, scale_rho_rad_Heqn, echarge_type, cdt_rho_chi, &
-      lrho_rad, lrho_chi_corrected, lrho_chi_inhom, ldefine_a2rhophi_with_Vpotential, &
-      rad_heating, ascale_heat, ascale_heat_off, aphimax, Gamma_phi0
+      lrho_rad, lrho_rad_apply, lrho_rad_apply2, lrho_chi_corrected, lrho_chi_inhom, ldefine_a2rhophi_with_Vpotential, &
+      rad_heating, ascale_heat, ascale_heat_off, aphimax, Gamma_phi0, lconf_time
 !
 ! Diagnostic variables (needs to be consistent with reset list below).
 !
@@ -164,6 +166,7 @@ module Special
   integer :: idiag_a2rhophim=0  ! DIAG_DOC: $a^2 \rho_\phi$
   integer :: idiag_a2rhogphim=0 ! DIAG_DOC: $0.5 <grad \phi^2>$
   integer :: idiag_rho_chi=0    ! DIAG_DOC: $\rho_\chi$
+  integer :: idiag_rho_rad=0    ! DIAG_DOC: $\rho_\mathrm{rad}$
   integer :: idiag_sigEma=0     ! DIAG_DOC: $\rho_\chi$
   integer :: idiag_sigBma=0     ! DIAG_DOC: $\rho_\chi$
   integer :: idiag_count_eb0a=0 ! DIAG_DOC: $f_\mathrm{EB0}$
@@ -337,8 +340,13 @@ module Special
             if (lcompute_dphi0) dphi0=-sqrt(1/(12.*pi))*axionmass*ascale_ini
             ! dphi0=-sqrt(1/(12.*pi))*axionmass*ascale_ini
             ! dphi0=-sqrt(16*pi/3)*axionmass*ascale_ini
-            tstart=-1/(ascale_ini*Hubble_ini)
+!
+!  Initial time.
+!
+            if (lconf_time) &
+              tstart=-1./(ascale_ini*Hubble_ini)
             t=tstart
+!
             lnascale=log(ascale_ini)
             f(:,:,:,iinfl_phi)   =f(:,:,:,iinfl_phi)   +phi0
             f(:,:,:,iinfl_dphi)  =f(:,:,:,iinfl_dphi)  +dphi0
@@ -413,8 +421,9 @@ module Special
 !
 !  Better default value based on alpf and axionmass
 !
-      if (Gamma_phi0==0) &
+      if (Gamma_phi0==impossible) then
         Gamma_phi0=alpf**2*axionmass**3/(64.*pi)
+      endif
 !
       call mpibcast_real(a2)
       call mpibcast_real(Hscript)
@@ -478,14 +487,18 @@ module Special
       real, intent(out) :: Hscript
       real, intent(in), optional :: a2rhom_all
 !
-!  Choice of prescription for Hscript
+!  Choice of prescription for Hscript (or H for cosmic time).
 !  alberto: to be changed, default to 'set' with Hscript0=0 and remove lzeroHubble
 !           as it trivially corresponds to new default choice
 !           old 'default' should correspond to 'friedmann'
 !
       select case (Hscript_choice)
         case ('default')
-          Hscript=sqrt((8.*pi/3.)*a2rhom_all)
+          if (lconf_time) then
+            Hscript=sqrt((8.*pi/3.)*a2rhom_all)
+          else
+            Hscript=sqrt((8.*pi/3.)*a2rhom_all*a21)
+          endif
           if (lgpu) call get_a2
         case ('set')
           Hscript=Hscript0
@@ -532,7 +545,7 @@ module Special
       real, dimension (mx,my,mz,mvar) :: df
       real, dimension (nx) :: Vprime
       real, dimension (nx) :: tmp, del2phi
-      real :: pref_Vprime=1., pref_Hubble=2., pref_del2=1., pref_alpf
+      real :: pref_Vprime=1., pref_Hubble=2., pref_del2=1., pref_alpf, pref_Gamma=impossible
       type (pencil_case) :: p
 !
       intent(in) :: f,p
@@ -554,6 +567,14 @@ module Special
           call fatal_error("dspecial_dt","no such Vprime_choice: "//trim(Vprime_choice))
       endselect
 !
+!  Current choice of temporal form of Gamma_phi.
+!
+      if (aphimax2>0.) then
+        Gamma_phi=Gamma_phi0*.5*(1.+tanh(a2-aphimax2))
+      else
+        Gamma_phi=0.
+      endif
+!
 !  Update df.
 !  dphi/dt = psi
 !  dpsi/dt = - ...
@@ -564,40 +585,39 @@ module Special
 !
       if (lconf_time) then
         pref_alpf=a21
-        if (aphimax2>0.) then
-          pref_Vprime=a2/(1.+a2/aphimax2)**2
-          Gamma_phi=Gamma_phi0*.5*(1.+tanh(a2-aphimax2))
-        else
-          pref_Vprime=a2
-          Gamma_phi=0.
-        endif
+        pref_Vprime=a2
+        pref_Gamma=ascale
       ! alberto: for cosmic time, coefficient of Hscript should be 3
       else
         pref_Hubble=3.; pref_Vprime=1.; pref_del2=a21
         pref_alpf=a21**2
+        pref_Gamma=1.
       endif
-        ! dphi/dt = dphi
-        df(l1:l2,m,n,iinfl_phi)=df(l1:l2,m,n,iinfl_phi)+p%infl_dphi
-        if (lrho_rad) then
-          df(l1:l2,m,n,iinfl_dphi)=df(l1:l2,m,n,iinfl_dphi) - &
-              (pref_Hubble*Hscript+Gamma_phi)*p%infl_dphi-pref_Vprime*Vprime
-        else
-          df(l1:l2,m,n,iinfl_dphi)=df(l1:l2,m,n,iinfl_dphi) - &
-              (pref_Hubble*Hscript)*p%infl_dphi-pref_Vprime*Vprime
-        endif
+!
+!  In the following, Hscript means H if cosmic time is used.
+!  dphi/dt = dphi
+!
+      df(l1:l2,m,n,iinfl_phi)=df(l1:l2,m,n,iinfl_phi)+p%infl_dphi
+      if (lrho_rad .and. lrho_rad_apply) then
+        df(l1:l2,m,n,iinfl_dphi)=df(l1:l2,m,n,iinfl_dphi) - &
+            (pref_Hubble*Hscript+pref_Gamma*Gamma_phi)*p%infl_dphi-pref_Vprime*Vprime
+      else
+        df(l1:l2,m,n,iinfl_dphi)=df(l1:l2,m,n,iinfl_dphi) - &
+            (pref_Hubble*Hscript)*p%infl_dphi-pref_Vprime*Vprime
+      endif
 !
 !  speed of light term
 !
-        if (c_light_axion/=0. .and. .not. lphi_hom) then
-          call del2(f,iinfl_phi,del2phi)
-          df(l1:l2,m,n,iinfl_dphi)=df(l1:l2,m,n,iinfl_dphi) + &
-              c_light_axion**2*pref_del2*del2phi
-          ! if (lconf_time) then
-          !   df(l1:l2,m,n,iinfl_dphi)=df(l1:l2,m,n,iinfl_dphi)+c_light_axion**2*del2phi
-          ! else
-          !   df(l1:l2,m,n,iinfl_dphi)=df(l1:l2,m,n,iinfl_dphi)+c_light_axion**2*a21*del2phi
-          !endif
-        endif
+      if (c_light_axion/=0. .and. .not. lphi_hom) then
+        call del2(f,iinfl_phi,del2phi)
+        df(l1:l2,m,n,iinfl_dphi)=df(l1:l2,m,n,iinfl_dphi) + &
+            c_light_axion**2*pref_del2*del2phi
+        ! if (lconf_time) then
+        !   df(l1:l2,m,n,iinfl_dphi)=df(l1:l2,m,n,iinfl_dphi)+c_light_axion**2*del2phi
+        ! else
+        !   df(l1:l2,m,n,iinfl_dphi)=df(l1:l2,m,n,iinfl_dphi)+c_light_axion**2*a21*del2phi
+        !endif
+      endif
 !
 !  magnetic terms, add (alpf/a^2)*(E.B) to dphi'/dt equation
 !
@@ -707,6 +727,8 @@ module Special
       use SharedVariables, only: get_shared_variable
       use Diagnostics , only: 
 !
+!  Here is the Friedmann equation. For cosmic time, Hscript means H.
+!
       if (lgpu) call read_sums_from_device
       call get_Hscript_and_a2(Hscript,a2rhom_all)
       if (lflrw) df_ode(iinfl_lna)=df_ode(iinfl_lna)+Hscript
@@ -741,10 +763,13 @@ module Special
       endif
 !
 !  Energy density of radiation from decaying inflaton field.
+!  Since a2rhophim_all includes a^2, and we want to have the physical
+!  energy density, so we divide by a^2, but in conformal time,
+!  we also need to multiply by a, so we divide by a.
 !
       if (lrho_rad) then
-        heating=Gamma_phi*a2rhophim_all/ascale**6
-        df_ode(iinfl_rho_rad)=df_ode(iinfl_rho_rad)-4.*Hscript*f_ode(iinfl_rho_chi)+heating
+        heating=Gamma_phi*a2rhophim_all/ascale
+        df_ode(iinfl_rho_rad)=df_ode(iinfl_rho_rad)-4.*Hscript*f_ode(iinfl_rho_rad)+heating
       endif
 !
 !  Diagnostics
@@ -762,15 +787,25 @@ module Special
       use Diagnostics 
       
       real, dimension(n_odevars), intent(in) :: f_ode
-      real :: rho_chi, lnascale
+      real :: rho_chi, rho_rad, lnascale
       real :: Hscript_diagnos
-
+!
+!  Set rho_chi for diagnostics
+!
       if (lrho_chi) then
         rho_chi=f_ode(iinfl_rho_chi)
       else
         rho_chi=0.
       endif
-
+!
+!  Set rho_rad for diagnostics
+!
+      if (lrho_rad) then
+        rho_rad=f_ode(iinfl_rho_rad)
+      else
+        rho_rad=0.
+      endif
+!
       if (ldiagnos) then
         call get_Hscript_and_a2(Hscript_diagnos,a2rhom_all_diagnos)
         if (lflrw) lnascale=f_ode(iinfl_lna)
@@ -782,6 +817,7 @@ module Special
         call save_name(a2rhophim_all_diagnos,idiag_a2rhophim)
         call save_name(a2rhogphim_all_diagnos,idiag_a2rhogphim)
         call save_name(rho_chi,idiag_rho_chi)
+        call save_name(rho_rad,idiag_rho_rad)
         call save_name(sigEm_all_diagnos,idiag_sigEma)
         call save_name(sigBm_all_diagnos,idiag_sigBma)
         if (lnoncollinear_EB_aver .or. lcollinear_EB_aver) &
@@ -866,7 +902,7 @@ module Special
         idiag_dphim=0; idiag_dphi2m=0; idiag_dphirms=0
         idiag_Hscriptm=0; idiag_lnam=0; idiag_ddotam=0
         idiag_a2rhopm=0; idiag_a2rhom=0; idiag_a2rhophim=0
-        idiag_a2rhogphim=0; idiag_rho_chi=0; idiag_sigEma=0
+        idiag_a2rhogphim=0; idiag_rho_chi=0; idiag_rho_rad=0; idiag_sigEma=0
         idiag_sigBma=0; idiag_count_eb0a=0; idiag_heating=0
       endif
 !
@@ -885,6 +921,7 @@ module Special
         call parse_name(iname,cname(iname),cform(iname),'a2rhophim',idiag_a2rhophim)
         call parse_name(iname,cname(iname),cform(iname),'a2rhogphim',idiag_a2rhogphim)
         call parse_name(iname,cname(iname),cform(iname),'rho_chi',idiag_rho_chi)
+        call parse_name(iname,cname(iname),cform(iname),'rho_rad',idiag_rho_rad)
         call parse_name(iname,cname(iname),cform(iname),'sigEma',idiag_sigEma)
         call parse_name(iname,cname(iname),cform(iname),'sigBma',idiag_sigBma)
         call parse_name(iname,cname(iname),cform(iname),'count_eb0a',idiag_count_eb0a)
@@ -1107,7 +1144,18 @@ module Special
 !
       phi=f(l1:l2,m,n,iinfl_phi)
       dphi=f(l1:l2,m,n,iinfl_dphi)
-      a2rho=0.5*dphi**2
+!
+!  For conformal time, rho is defined by .5*dphi^2/a^2,
+!  but for cosmic time, we have just .5*dphi^2, so a2rho=.5*dphi^2*a^2.
+!
+      if (lconf_time) then
+        a2rho=0.5*dphi**2
+      else
+        a2rho=0.5*dphi**2*a2
+      endif
+!
+!  a2rhop is for pressure.
+!
       a2rhop=dphi**2
       ! if (lphi_hom) then
       !   a2rhop=dphi**2
@@ -1170,7 +1218,7 @@ module Special
 !
 !  Do the same for rho_rad
 !
-      if (lrho_rad) &
+      if (lrho_rad .and. lrho_rad_apply2) &
         a2rho=a2rho+scale_rho_rad_Heqn*a2*f_ode(iinfl_rho_rad)
 !
       a2rhopm=a2rhopm+sum(a2rhop)
