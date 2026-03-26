@@ -2163,8 +2163,8 @@ module Hydro
           do n=n1,n2; do m=m1,m2
             !if (y(m)>=0. .and. y(m)<=1. .and. z(n)>=-1. .and. z(n)<=1.) then
             if (y(m)>=-1. .and. y(m)<=1. .and. z(n)>=0. .and. z(n)<=1.) then
-              f(l1:l2,m,n,iuy)=ampluu(j)*cos(pi*(y(m)-.5))*sin(pi*(z(n)-.5))
-              f(l1:l2,m,n,iuz)=ampluu(j)*sin(pi*(y(m)-.5))*cos(pi*(z(n)-.5))
+              f(l1:l2,m,n,iuy)=-ampluu(j)*cos(pi*(y(m)-.5))*sin(pi*(z(n)-.5))
+              f(l1:l2,m,n,iuz)=+ampluu(j)*sin(pi*(y(m)-.5))*cos(pi*(z(n)-.5))
             endif
           enddo; enddo
 !
