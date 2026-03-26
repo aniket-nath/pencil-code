@@ -562,7 +562,7 @@ endsubroutine helper_loop
 !
     if ((it<nt) .and. (dt<dtmin)) then
       if (lroot) then 
-        call system_cmd("echo TIMESTEP BECAME TOO SHORT > TIMESTEP")
+        call system_cmd("echo TIMESTEP BECAME TOO SHORT > TIMESTEP_BECAME_TOO_SHORT")
         write(*,*) ' Time step has become too short: dt = ', dt
       endif
       save_lastsnap=.false.
@@ -637,8 +637,8 @@ endsubroutine helper_loop
       else
         call touch_file('data/allprocs/signals/DOUBLE_PRECISION_RUN')
       endif
-      if (file_exists('TIMESTEP')) &
-        call delete_file('TIMESTEP')
+      if (file_exists('TIMESTEP_BECAME_TOO_SHORT')) &
+        call delete_file('TIMESTEP_BECAME_TOO_SHORT')
     endif
   endsubroutine setup_signal_files
 !***********************************************************************
