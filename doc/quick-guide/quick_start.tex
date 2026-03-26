@@ -492,24 +492,29 @@ If you have activated GPU acceleration for an already existing setup, repeat \co
 
 \subsection{Running}
 Important: the parameter \command{ncpus} in \command{cparam.local} has now to be understood as ``number of MPI ranks = number of UNIX processes = number of GPUs". The number of CPUs employed is always larger  as
-the accelerated code makes use of CPU multithreading. Hence, setting in the environment (\code{bash}: by \command{export})
+the accelerated code makes use of CPU multithreading. Hence, setting the environment properly is important, and \command{pc_start} and \command{pc_run} do this for you when invoked in a SLURM job with a proper setting of the \code{srun} parameter \code{cpus-per-task} (see below). Without SLURM, you have to set
+(\code{bash}: by \command{export})
 \begin{verbatim}
  OMP_NUM_THREADS=<ncores>
 \end{verbatim}
-with \command{ncores}$ >=2$ before running is mandatory. 
+with \command{ncores}$ >=2$ before running.
 Choose \command{ncores} as large as sensible in view of the hardware; on clusters consult the node specification.
-The additional settings
+When using \command{start.csh} and \command{run.csh}, it is recommended to export the additional settings
 \begin{verbatim}
  OMP_MAX_ACTIVE_LEVELS=2
  OMP_PROC_BIND=close,spread
  OMP_WAIT_POLICY=PASSIVE
 \end{verbatim}
-are recommended. Note, that when running in a job system like SLURM, the number of CPUs assigned to an MPI process (\command{srun} option: \command{--cpus-per-task}) must agree with \command{ncores} and all exports to the environment need to be included in the \code{sbatch} script.
+before running.
+Note, that when running in SLURM
+%a job system like SLURM, the number of CPUs assigned to an MPI process (\command{srun} option: \command{--cpus-per-task}) must agree with \command{ncores} and 
+all exports to the environment need to be included in the \code{sbatch} script.
 
-If you are using MPICH, add the following in your job script before calling \command{pc\_run} but after \command{pc\_start}.
+If you are using MPICH and \command{start.csh/run.csh}, add the following in your job script before calling \command{run.csh} but after \command{start.csh}.
 \begin{verbatim}
 export MPICH_GPU_SUPPORT_ENABLED=1
 \end{verbatim}
+while, again, \code{pc_start/pc_run} will do this for you.
 
 The normal usage of GPUs will imply runtime compilation, 
 because of which for module environments it is imperative that the same modules are used for the run as for the build.
@@ -534,14 +539,22 @@ Example SLURM batch script (CRAY machines):
 source src/.moduleinfo
 
 export LD_LIBRARY_PATH=${CRAY_LD_LIBRARY_PATH}:$LD_LIBRARY_PATH
+
+pc_start
+pc_run
+
+# or alternatively, when using start.csh, run.csh:
+
 export OMP_NUM_THREADS=${SLURM_CPUS_PER_TASK}
 export OMP_MAX_ACTIVE_LEVELS=2
 export OMP_PROC_BIND=close,spread
 export OMP_WAIT_POLICY=PASSIVE
 
-pc_start
+start.csh
 export MPICH_GPU_SUPPORT_ENABLED=1   # MPICH only
-pc_run
+run.csh
+
+# end alternative
 
 \end{verbatim}
 

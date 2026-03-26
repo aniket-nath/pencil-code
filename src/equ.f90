@@ -987,7 +987,7 @@ module Equ
     endsubroutine check_if_necessary
 !***********************************************************************
     subroutine before_boundary_shared(f)
-
+!
 !  These before_boundaries are shared between CPU and GPU (that e.g. set parameters are done infrequently enough 
 !  to not take a performance hit from moving buffer between host and device)
 !
@@ -1000,7 +1000,7 @@ module Equ
 
       if (linterstellar) call interstellar_before_boundary(f)
       if (lshear)        call shear_before_boundary(f)
-
+!
     endsubroutine before_boundary_shared
 !***********************************************************************
     subroutine before_boundary_cpu(f)
@@ -1992,8 +1992,8 @@ module Equ
       ldiagnos = .false.
       df_copy = 0.0
       
-
       do itsub = 1,num_substeps
+
         lfirst=(itsub==1)
         llast=(itsub==itorder)
         !df_tmp = 0.0
