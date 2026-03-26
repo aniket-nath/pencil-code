@@ -637,8 +637,8 @@ endsubroutine helper_loop
       else
         call touch_file('data/allprocs/signals/DOUBLE_PRECISION_RUN')
       endif
-      if (file_exists('data/allprocs/signals/TIMESTEP_BECAME_TOO_SHORT')) &
-        call delete_file('data/allprocs/signals/TIMESTEP_BECAME_TOO_SHORT')
+      if (file_exists('TIMESTEP')) &
+        call delete_file('TIMESTEP')
     endif
   endsubroutine setup_signal_files
 !***********************************************************************
