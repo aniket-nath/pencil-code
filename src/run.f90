@@ -562,7 +562,7 @@ endsubroutine helper_loop
 !
     if ((it<nt) .and. (dt<dtmin)) then
       if (lroot) then 
-        call system_cmd("echo TIMESTEP BECAME TOO SHORT > ERROR")
+        call system_cmd("echo TIMESTEP BECAME TOO SHORT > TIMESTEP")
         write(*,*) ' Time step has become too short: dt = ', dt
       endif
       save_lastsnap=.false.
