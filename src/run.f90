@@ -309,6 +309,7 @@ endsubroutine helper_loop
                              particles_load_balance, particles_stochastic
   use Signal_handling, only: emergency_stop
   use Sub,             only: control_file_exists, calc_scl_factor
+  use Syscalls,        only: system_cmd
   use Testscalar,      only: rescaling_testscalar
   use Testfield,       only: rescaling_testfield
   use TestPerturb,     only: testperturb_begin, testperturb_finalize
@@ -561,7 +562,7 @@ endsubroutine helper_loop
 !
     if ((it<nt) .and. (dt<dtmin)) then
       if (lroot) then 
-        call touch_file('data/allprocs/signals/TIMESTEP_BECAME_TOO_SHORT')
+        call system_cmd("echo TIMESTEP BECAME TOO SHORT > ERROR")
         write(*,*) ' Time step has become too short: dt = ', dt
       endif
       save_lastsnap=.false.

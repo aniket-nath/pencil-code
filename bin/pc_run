@@ -706,7 +706,7 @@ sub run_system_cmd {
     if (-e $errorfile) {
         print "Found ERROR file\n";
         $status |= 16;
-        clear_error();
+        #clear_error();
     }
 
     die "Aborting.\n" if ($status != 0);
