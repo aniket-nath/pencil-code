@@ -619,13 +619,16 @@ endsubroutine helper_loop
   subroutine setup_signal_files
   use File_io,         only: file_exists,delete_file
   use General,         only: touch_file
-  use Syscalls,        only: sizeof_real
+  use Syscalls,        only: sizeof_real,directory_exists,system_cmd
 !
 !  Store metadata was the run in double or single precision
 !  We do this instead of e.g. reading it from dim.dat since dim.dat won't exist
 !  if we use HDF5-IO
 !
     if(lroot) then
+      if (.not. directory_exists('data/allprocs/signals')) then
+              call system_cmd('mkdir data/allprocs/signals')
+      endif
       if (file_exists('data/allprocs/signals/SINGLE_PRECISION_RUN')) call delete_file('data/allprocs/signals/SINGLE_PRECISION_RUN')
       if (file_exists('data/allprocs/signals/DOUBLE_PRECISION_RUN')) call delete_file('data/allprocs/signals/DOUBLE_PRECISION_RUN')
       if(sizeof_real() < 8) then
