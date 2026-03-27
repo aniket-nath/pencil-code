@@ -43,6 +43,8 @@ bool calculated_coeff_scales = false;
 
 AcTaskGraph* GW_timestep_graph  =  NULL;
 AcTaskGraph* boundary_z_halo_exchange_graph =  NULL;
+//TP: logs performance metrics of Astaroth
+const bool log = true;
 
 #define real AcReal
 #include "math_utils.h"
@@ -1097,10 +1099,11 @@ extern "C" void torch_infer_c_api(int itsub){
 	if(!calling_infer){
 		AcRealSymmetricTensor tau_means = mesh.info[AC_tau_hydro_means];
 		AcRealSymmetricTensor tau_stds  = mesh.info[AC_tau_hydro_stds];
-		fprintf(stderr,"Calling infer\n");
+    acLogFromRootProc(rank,"Doing inference\n");
 		fprintf(stderr,"means xx: %f, yy: %f, zz: %f, xy: %f, yz: %f, xz: %f\n", tau_means.xx, tau_means.yy, tau_means.zz, tau_means.xy, tau_means.yz, tau_means.xz);
 		fprintf(stderr,"stds xx: %f, yy: %f, zz: %f, xy: %f, yz: %f, xz: %f\n", tau_stds.xx, tau_stds.yy, tau_stds.zz, tau_stds.xy, tau_stds.yz, tau_stds.xz);
 		fflush(stderr);
+		fflush(stdout);
 	}
 	calling_infer = true;
 
@@ -1152,8 +1155,9 @@ extern "C" void torch_train_c_api(AcReal *loss_val, int itsub, double t) {
   if(itsub != 1) return;
   
   if(!calling_train){
-  	fprintf(stderr,"Calling training\n");
+    acLogFromRootProc(rank,"Doing training\n");
   	fflush(stderr);
+  	fflush(stdout);
   }
 
 
@@ -1178,7 +1182,7 @@ extern "C" void torch_train_c_api(AcReal *loss_val, int itsub, double t) {
   acGridHaloExchange();
   torch_trainCAPI((int[]){mx,my,mz}, uumean_ptr, TAU_ptr, loss_val,input_channels,output_channels,"stationary");
   train_loss.push_back(*loss_val);
-	train_nts.push_back(nt);
+	train_nts.push_back(it);
   train_counter++;
   print_debug();
   if (it==nt){
@@ -1296,11 +1300,11 @@ std::vector<double> buffer;
 
 
 void print_debug() {
-if (it % 50 !=0) return;
+if (it % 5 !=0) return;
 #if TRAINING
     #include "user_constants.h"
 		
-		std::string fname = "snapshots/snapshot_rank_" + std::to_string(my_rank) + "_it_" + std::to_string(it) + ".bin";
+		std::string fname = "snapshots/snapshot_38_rank_" + std::to_string(my_rank) + "_it_" + std::to_string(it) + ".bin";
 		std::ifstream infile(fname, std::ios::binary);
 		if (infile.good()) return;
 		
@@ -1413,7 +1417,7 @@ if (it % 50 !=0) return;
 	
 
 		//std::ostringstream fname;
-    //fname << "snapshots/snapshot_rank_" + std::to_string(my_rank) + "_it_" + std::to_string(it) + ".bin";
+    //fname << "snapshots/snapshot_38_rank_" + std::to_string(my_rank) + "_it_" + std::to_string(it) + ".bin";
     std::ofstream out(fname, std::ios::binary);
     out.write(reinterpret_cast<const char*>(buffer.data()), buffer.size() * sizeof(double));
     out.close();
@@ -1516,8 +1520,79 @@ update_forcing(const int isubstep)
 	   fprintf(stderr,"Second forcing force not yet implemented on GPU!\n");
 	   exit(EXIT_FAILURE);
    }
-   if (isubstep == num_substeps) forcing_params.Update();  // calculate on CPU and load into GPU
+   if (isubstep == num_substeps) 
+	 {
+	   forcing_params.Update();  // calculate on CPU and load into GPU
+	 }
 #endif
+}
+/***********************************************************************************************/
+void
+prepare_rhs(const int isubstep, double t)
+{
+  update_forcing(isubstep);
+  fourier_boundary_conditions();
+  acDeviceSetInput(acGridGetDevice(), AC_step_num,(PC_SUB_STEP_NUMBER) (isubstep-1));
+  if (lshear) 
+  {
+	  acDeviceSetInput(acGridGetDevice(), AC_shear_delta_y, deltay);
+  }
+  acDeviceSetInput(acGridGetDevice(), AC_t,(AcReal)t);
+}
+/***********************************************************************************************/
+void
+set_timestep(double t)
+{
+    static bool lfirst_timestep_calculated = false;
+	  //TP: lcpu_timestep_on_gpu enables the same timestep as PC when testing
+	  if (ldt && lcourant_dt && (!lfirst_timestep_calculated || lcpu_timestep_on_gpu)) 
+	  {
+		  dt1_interface = GpuCalcDt(AcReal(t));
+	  	lfirst_timestep_calculated = true;
+	  }
+    //TP: done in this more complex manner to ensure the actually integrated time and the time reported by Pencil agree
+    //if we call set_dt after the first timestep there would be slight shift in dt what Pencil sees and what is actually used for time integration
+	  if (ldt) 
+		{
+		  set_dt(dt1_interface);
+		}
+	  acDeviceSetInput(acGridGetDevice(), AC_dt,dt);
+}
+/***********************************************************************************************/
+void
+calc_timestep(double t)
+{
+  constexpr AcReal unit = 1.0;
+  AcReal dt1_;
+  if (!lcourant_dt)
+  {
+    const AcReal maximum_error = lsingle_precision_timestep 
+	    				? ((AcReal)acDeviceGetOutput(acGridGetDevice(), AC_maximum_error_single_precision))/eps_rkf
+	    				: ((AcReal)acDeviceGetOutput(acGridGetDevice(), AC_maximum_error))/eps_rkf;
+    AcReal dt_;
+    const AcReal dt_increase=-unit/(itorder+dtinc);
+    const AcReal dt_decrease=-unit/(itorder-dtdec);
+    constexpr AcReal safety=(AcReal)0.95;
+    if (maximum_error > 1)
+    {
+    	// Step above error threshold so decrease the next time step
+    	const AcReal dt_temp = safety*dt*pow(maximum_error,dt_decrease);
+    	// Don't decrease the time step by more than a factor of ten
+      constexpr AcReal decrease_factor = (AcReal)0.1;
+    	dt_ = sign(max(abs(dt_temp), decrease_factor*abs(dt)), dt);
+    } 
+    else
+    {
+    	dt_ = dt*pow(maximum_error,dt_increase);
+    }
+    set_next_dt(dt_);
+    dt1_ = unit/dt_;
+  }
+  else 
+  {
+    dt1_ = calc_dt1_courant(AcReal(t));
+  }
+  dt1_interface = dt1_;
 }
 /***********************************************************************************************/
 extern "C" void substepGPU(int isubstep, double t)
@@ -1525,34 +1600,16 @@ extern "C" void substepGPU(int isubstep, double t)
 //  Do the 'isubstep'th integration step on all GPUs on the node and handle boundaries.
 //
 {
-   //TP: logs performance metrics of Astaroth
-  const bool log = false;
-  fourier_boundary_conditions();
-  acDeviceSetInput(acGridGetDevice(), AC_step_num,(PC_SUB_STEP_NUMBER) (isubstep-1));
-  if (lshear) 
-  {
-	  acDeviceSetInput(acGridGetDevice(), AC_shear_delta_y, deltay);
-  }
-  Device dev = acGridGetDevice();
-  //TP: done in this more complex manner to ensure the actually integrated time and the time reported by Pencil agree
-  //if we call set_dt after the first timestep there would be slight shift in dt what Pencil sees and what is actually used for time integration
-  
-  acDeviceSetInput(acGridGetDevice(), AC_t,(AcReal)t);
+	prepare_rhs(isubstep,t);
   if (isubstep == 1) 
   {
+#if LGRAVITATIONAL_WAVES_HTXK
 	  if(GW_thread.joinable())
 	  {
 	          GW_thread.join();
 	  }
-          static bool lfirst_timestep_calculated = false;
-	  //TP: lcpu_timestep_on_gpu enables the same timestep as PC when testing
-	  if (ldt && lcourant_dt && (!lfirst_timestep_calculated || lcpu_timestep_on_gpu)) 
-	  {
-		dt1_interface = GpuCalcDt(AcReal(t));
-	  	lfirst_timestep_calculated = true;
-	  }
-	  if (ldt) set_dt(dt1_interface);
-	  acDeviceSetInput(acGridGetDevice(), AC_dt,dt);
+#endif
+    set_timestep(t);
 #if LGRAVITATIONAL_WAVES_HTXK
 	  if(lsplit_gw_rhs_from_rest_on_gpu)
 	  {
@@ -1560,11 +1617,9 @@ extern "C" void substepGPU(int isubstep, double t)
 	  }
 #endif
   }
-  //TP: Important that the update of forcing comes after setting dt since it depends on it!
-  update_forcing(isubstep);
 
-  //fprintf(stderr,"before acGridExecuteTaskGraph");
   AcTaskGraph *rhs =  acGetOptimizedDSLTaskGraph(AC_rhs);
+
   auto start = MPI_Wtime();
   acGridExecuteTaskGraph(rhs, 1);
   auto end = MPI_Wtime();
@@ -1573,39 +1628,7 @@ extern "C" void substepGPU(int isubstep, double t)
               || (isubstep == 1 &&  lcourant_dt)
              )
      )
-  {
-    constexpr AcReal unit = 1.0;
-    AcReal dt1_;
-    if (!lcourant_dt)
-    {
-      const AcReal maximum_error = lsingle_precision_timestep 
-	      				? ((AcReal)acDeviceGetOutput(acGridGetDevice(), AC_maximum_error_single_precision))/eps_rkf
-	      				: ((AcReal)acDeviceGetOutput(acGridGetDevice(), AC_maximum_error))/eps_rkf;
-      AcReal dt_;
-      const AcReal dt_increase=-unit/(itorder+dtinc);
-      const AcReal dt_decrease=-unit/(itorder-dtdec);
-      constexpr AcReal safety=(AcReal)0.95;
-      if (maximum_error > 1)
-      {
-      	// Step above error threshold so decrease the next time step
-      	const AcReal dt_temp = safety*dt*pow(maximum_error,dt_decrease);
-      	// Don't decrease the time step by more than a factor of ten
-        constexpr AcReal decrease_factor = (AcReal)0.1;
-      	dt_ = sign(max(abs(dt_temp), decrease_factor*abs(dt)), dt);
-      } 
-      else
-      {
-      	dt_ = dt*pow(maximum_error,dt_increase);
-      }
-      set_next_dt(dt_);
-      dt1_ = unit/dt_;
-    }
-    else 
-    {
-      dt1_ = calc_dt1_courant(AcReal(t));
-    }
-    dt1_interface = dt1_;
-  }
+	calc_timestep(t);
   return;
 }
 /***********************************************************************************************/
@@ -2132,16 +2155,21 @@ extern "C" void finalizeGPU()
 	// write the loss values to a file
 
 	std::ofstream myFile;
+
 	std::string fileString = "train_loss_" + std::to_string(my_rank)  + ".csv";	
-
 	myFile.open(fileString);
-
   myFile << "epoch,train_loss\n";
-
 	for (int i=0;i<train_loss.size();i++){
 		myFile << i << "," << train_loss[i] << "\n";
 	}
-	
+  myFile.close();
+
+	std::string train_sample = "train_sample_" + std::to_string(my_rank) + ".csv";
+  myFile.open(train_sample);
+  myFile << "train_sample_nts\n";
+  for (int i=0;i<train_nts.size();i++){
+  	myFile << train_nts[i] << "\n";
+  }
 	myFile.close();
 }
 /***********************************************************************************************/
