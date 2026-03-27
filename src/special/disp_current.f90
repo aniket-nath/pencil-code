@@ -6,7 +6,7 @@
 !  25-feb-07/axel: adapted from nospecial.f90
 !
 !** AUTOMATIC CPARAM.INC GENERATION ****************************
-! Declare (for generation of special_dummies.inc) the number of f array
+! Declare (for generation of disp_current_dummies.inc) the number of f array
 ! variables and auxiliary variables added by this module
 !
 ! CPARAM logical, parameter :: lspecial = .true.
@@ -23,7 +23,7 @@
 ! PENCILS EXPECTED gpsi(3), dpsi
 !***************************************************************
 !
-module Special
+module disp_current
 !
   use Cdata
   use General, only: keep_compiler_quiet
@@ -76,7 +76,7 @@ module Special
   character (len=labellen), dimension(ninit) :: initee='nothing'
   character (len=labellen) :: power_filename='power_profile.dat'
 !
-  namelist /special_init_pars/ &
+  namelist /disp_current_init_pars/ &
     initee, inita0, alpf, &
     ampl_ex, ampl_ey, ampl_ez, ampl_a0, &
     kx_ex, kx_ey, kx_ez, &
@@ -101,7 +101,7 @@ module Special
   logical :: reinitialize_ee=.false.
   character (len=labellen) :: aderiv_scaling='table'
 !
-  namelist /special_run_pars/ &
+  namelist /disp_current_run_pars/ &
     alpf, llongitudinalE, llorenz_gauge_disp, lphi_hom, lphi_linear_regime, &
     leedot_as_aux, ldivE_as_aux, lsigE_as_aux, lsigB_as_aux, &
     eta_ee, lcurlyA, beta_inflation, &
@@ -1218,7 +1218,7 @@ module Special
 !
       integer, intent(out) :: iostat
 !
-      read(parallel_unit, NML=special_init_pars, IOSTAT=iostat)
+      read(parallel_unit, NML=disp_current_init_pars, IOSTAT=iostat)
 !
     endsubroutine read_special_init_pars
 !***********************************************************************
@@ -1226,7 +1226,7 @@ module Special
 !
       integer, intent(in) :: unit
 !
-      write(unit, NML=special_init_pars)
+      write(unit, NML=disp_current_init_pars)
 !
     endsubroutine write_special_init_pars
 !***********************************************************************
@@ -1236,7 +1236,7 @@ module Special
 !
       integer, intent(out) :: iostat
 !
-      read(parallel_unit, NML=special_run_pars, IOSTAT=iostat)
+      read(parallel_unit, NML=disp_current_run_pars, IOSTAT=iostat)
 !
     endsubroutine read_special_run_pars
 !***********************************************************************
@@ -1244,7 +1244,7 @@ module Special
 !
       integer, intent(in) :: unit
 !
-      write(unit, NML=special_run_pars)
+      write(unit, NML=disp_current_run_pars)
 !
     endsubroutine write_special_run_pars
 !***********************************************************************
@@ -1496,7 +1496,7 @@ module Special
 !**  copies dummy routines from nospecial.f90 for any Special      **
 !**  routines not implemented in this file                         **
 !**                                                                **
-    include '../special_dummies.inc'
+    include '../disp_current_dummies.inc'
 !********************************************************************
 !
-endmodule Special
+endmodule disp_current

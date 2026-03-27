@@ -32,7 +32,7 @@
 !    NOT IMPLEMENTED FULLY YET - HOOKS NOT PLACED INTO THE PENCIL-CODE
 !
 !** AUTOMATIC CPARAM.INC GENERATION ****************************
-! Declare (for generation of special_dummies.inc) the number of f array
+! Declare (for generation of backreact_infl_dummies.inc) the number of f array
 ! variables and auxiliary variables added by this module
 !
 ! CPARAM logical, parameter :: lspecial = .true.
@@ -72,7 +72,7 @@
 ! Where geo_kws it replaced by the filename of your new module
 ! upto and not including the .f90
 !
-module Special
+module backreact_infl
 !
   use Cdata
   use General, only: keep_compiler_quiet
@@ -130,7 +130,7 @@ module Special
   character (len=labellen), dimension(ninit) :: initspecial='nothing'
   character (len=50) :: echarge_type='const', init_rho_chi='zero', init_rho_rad='zero'
 !
-  namelist /special_init_pars/ &
+  namelist /backreact_infl_init_pars/ &
       initspecial, phi0, dphi0, axionmass, eps, ascale_ini, &
       lcompute_dphi0, lem_backreact, &
       c_light_axion, lambda_axion, amplphi, ampldphi, lno_noise_phi, lno_noise_dphi, &
@@ -142,7 +142,7 @@ module Special
       lrho_rad, init_rho_rad, lconf_time, &
       echarge_type, init_rho_chi, rho_chi_init, lrho_chi_inhom
 !
-  namelist /special_run_pars/ &
+  namelist /backreact_infl_run_pars/ &
       initspecial, phi0, dphi0, axionmass, eps, ascale_ini, &
       lbackreact_infl, lem_backreact, c_light_axion, lambda_axion, Vprime_choice, &
       lzeroHubble, ldt_backreact_infl, Ndiv, Hscript0, Hscript_choice, infl_v, &
@@ -853,7 +853,7 @@ module Special
 !
       integer, intent(out) :: iostat
 !
-      read(parallel_unit, NML=special_init_pars, IOSTAT=iostat)
+      read(parallel_unit, NML=backreact_infl_init_pars, IOSTAT=iostat)
 !
     endsubroutine read_special_init_pars
 !***********************************************************************
@@ -861,7 +861,7 @@ module Special
 !
       integer, intent(in) :: unit
 !
-      write(unit, NML=special_init_pars)
+      write(unit, NML=backreact_infl_init_pars)
 !
     endsubroutine write_special_init_pars
 !***********************************************************************
@@ -871,7 +871,7 @@ module Special
 !
       integer, intent(out) :: iostat
 !
-      read(parallel_unit, NML=special_run_pars, IOSTAT=iostat)
+      read(parallel_unit, NML=backreact_infl_run_pars, IOSTAT=iostat)
 !
     endsubroutine read_special_run_pars
 !***********************************************************************
@@ -879,7 +879,7 @@ module Special
 !
       integer, intent(in) :: unit
 !
-      write(unit, NML=special_run_pars)
+      write(unit, NML=backreact_infl_run_pars)
 !
     endsubroutine write_special_run_pars
 !***********************************************************************
@@ -1382,6 +1382,6 @@ module Special
 !**  copies dummy routines from nospecial.f90 for any Special      **
 !**  routines not implemented in this file                         **
 !**                                                                **
-    include '../special_dummies.inc'
+    include '../backreact_infl_dummies.inc'
 !***********************************************************************
-endmodule Special
+endmodule backreact_infl
