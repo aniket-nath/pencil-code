@@ -1372,6 +1372,7 @@ module Special
     call copy_addr(phi0,p_par(28))
     call copy_addr(lrho_rad,p_par(29)) ! bool
 
+    call copy_addr(lrho_rad_apply,p_par(30)) ! bool
     endsubroutine pushpars2c
 !********************************************************************
 !********************************************************************
