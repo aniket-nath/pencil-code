@@ -8,12 +8,13 @@ def main():
     config = vars(args)
     PC_HOME = config["pencil_home"]
     os.environ["PENCIL_USER"] = "GPU_AUTOTEST"
-    source_command = f"cd {PC_HOME} && . ./sourceme.sh"
+    #source_command = f"cd {PC_HOME} && source sourceme.sh"
+    source_command = ""
     submodule_command = "git submodule update --init --remote"
-    build_command = f"cd {PC_HOME}/samples/1d-tests/sine-Gordon_doublet && pc_build -f GNU-GCC_MPI+GNU-GCC_GPU+GNU-GCC_debug MODIFY_SOURCE_CODE=on"
-    command = f"{source_command} && {submodule_command} && {build_command}"
+    build_command = f"cd {PC_HOME}/samples/build-samples/sample0 && pc_build -f GNU-GCC_MPI+GNU-GCC_GPU+GNU-GCC_debug MODIFY_SOURCE_CODE=on"
+    command = f"{submodule_command} && {build_command}"
     os.system(command)
-    os.system(f"cd {PC_HOME} && git diff")
+    return os.system(f"cd {PC_HOME} && git diff")
 
 if __name__ == "__main__":
     main()
