@@ -4118,7 +4118,8 @@ module Sub
       dt1_local=dt1_
       ! Timestep growth limiter
       if (ddt > 0.) dt1_local=max(dt1_local,dt1_last)
-      call mpiallreduce_max(dt1_local,dt1,MPI_COMM_PENCIL)
+!TP: when using the GPU the timestep has already been reduced across ranks
+      if(.not. lgpu) call mpiallreduce_max(dt1_local,dt1,MPI_COMM_PENCIL)
 !
 !  now set the actual time step, based on dt1
 !
