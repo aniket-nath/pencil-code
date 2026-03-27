@@ -11,7 +11,7 @@ VISCOSITY = noviscosity
 HYDRO     = nohydro
 DENSITY   = nodensity
 ENTROPY   = noentropy
-MAGNETIC  = nomagnetic
+MAGNETIC  = magnetic
 RADIATION = noradiation
 PSCALAR   = nopscalar
 EOS       = eos_temperature_ionization
@@ -20,7 +20,7 @@ GRAVITY   = nogravity
 FORCING   = noforcing
 SHEAR     = noshear
 
-SPECIAL   = special/alphadisk
+SPECIAL   = special/alphadisk special/disp_current special/chiral_mhd
 
 REAL_PRECISION = double
 GPU = gpu_astaroth

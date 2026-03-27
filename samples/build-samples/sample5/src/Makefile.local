@@ -16,7 +16,8 @@ RADIATION = noradiation
 PSCALAR   = nopscalar
 EOS       = eos_chemistry_simple
 
-GRAVITY   = nogravity
+INTERSTELLAR =   interstellar
+GRAVITY      =   gravity_simple
 FORCING   = noforcing
 SHEAR     = noshear
 

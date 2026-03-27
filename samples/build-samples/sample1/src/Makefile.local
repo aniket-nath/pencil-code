@@ -26,4 +26,5 @@ PSCALAR   = pscalar
 EOS       = eos_ionization
 GRAVITY   =   gravity_simple
 SHEAR     = shear
+SPECIAL   = special/klein_gordon special/axionSU2back
 GPU       = gpu_astaroth
