@@ -4,15 +4,16 @@
 ###
 
 MPICOMM=mpicomm
-GRAVITY=nogravity
-FORCING=noforcing
-ENTROPY=noentropy
+GRAVITY=gravity_r
+FORCING=forcing
+ENTROPY=entropy
 MAGNETIC=magnetic
-VISCOSITY=noviscosity
-HYDRO=nohydro
+VISCOSITY=viscosity
+HYDRO=hydro
 EOS=noeos
-DENSITY=nodensity
+DENSITY=density
 FOURIER=fourier_fftpack
+PSCALAR=pscalar_nolog
 POWER=power_spectrum
 SPECIAL = special/backreact_infl special/disp_current special/gravitational_waves_hTXk
 REAL_PRECISION=double

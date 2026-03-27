@@ -14,7 +14,7 @@ ENTROPY   = noentropy
 MAGNETIC  = nomagnetic
 RADIATION = noradiation
 PSCALAR   = nopscalar
-EOS       = eos_temperature_ionization
+EOS       = eos_chemistry_simple
 
 GRAVITY   = nogravity
 FORCING   = noforcing

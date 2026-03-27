@@ -16,15 +16,14 @@ IO        =   io_collect
 
 FILE_IO   =   file_io_f95
 
-HYDRO     =   hydro
-DENSITY   =   density
-ENTROPY   =   entropy
+HYDRO     = hydro
+DENSITY   = density
+ENTROPY   = entropy
 MAGNETIC  = nomagnetic
-RADIATION = noradiation
-PSCALAR   = nopscalar
+RADIATION = radiation
+PSCALAR   = pscalar
 
-EOS       = eos_idealgas
+EOS       = eos_ionization
 GRAVITY   =   gravity_simple
-FORCING   = noforcing
-SHEAR     = noshear
+SHEAR     = shear
 GPU       = gpu_astaroth
