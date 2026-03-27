@@ -44,7 +44,7 @@ bool calculated_coeff_scales = false;
 AcTaskGraph* GW_timestep_graph  =  NULL;
 AcTaskGraph* boundary_z_halo_exchange_graph =  NULL;
 //TP: logs performance metrics of Astaroth
-const bool log = true;
+const bool performance_logs = true;
 
 #define real AcReal
 #include "math_utils.h"
@@ -1623,7 +1623,7 @@ extern "C" void substepGPU(int isubstep, double t)
   auto start = MPI_Wtime();
   acGridExecuteTaskGraph(rhs, 1);
   auto end = MPI_Wtime();
-  if (log && !rank) fprintf(stderr,"RHS TOOK: %14e\n",end-start);
+  if (performance_logs && !rank) fprintf(stderr,"RHS TOOK: %14e\n",end-start);
   if (ldt && (   (isubstep == 5 && !lcourant_dt) 
               || (isubstep == 1 &&  lcourant_dt)
              )
