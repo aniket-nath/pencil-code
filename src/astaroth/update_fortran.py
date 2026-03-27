@@ -1,4 +1,5 @@
 import os
+import sys
 import argparse
 def main():
     argparser = argparse.ArgumentParser(description="Update *.f90 files to be GPU ready",
