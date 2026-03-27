@@ -2115,6 +2115,7 @@ module EquationOfState
     call copy_addr(lconst_yh,p_par(31)) ! bool
     call copy_addr(yh_const,p_par(32))
 
+    call copy_addr(cp_full,p_par(33)) ! (mx) (my) (mz)
     endsubroutine pushpars2c
 !***********************************************************************
 !********************************************************************
