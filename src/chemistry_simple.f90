@@ -28,7 +28,7 @@ module Chemistry
 !
   use Cdata
   use General, only: keep_compiler_quiet
-  use EquationOfState
+  use EquationOfState, pushpars2c_eos => pushpars2c
   use Messages
 !
   implicit none
@@ -215,7 +215,9 @@ module Chemistry
 !
       integer :: k, ichemspec_tmp
       character(len=fnlen) :: input_file
+      character (len=labellen), dimension(20) :: chemspec_names
       logical ::  chemin, cheminp
+      integer :: i
 !
 !  Initialize some index pointers
 !
@@ -270,14 +272,18 @@ module Chemistry
       else
 !        if (lmech_simple) then
         if (lmech_simple .and. nchemspec==5) then
-          varname(ichemspec(1):ichemspec(nchemspec))= (/ 'CO2       ','CO        ','N2        ','O2        ','H2O       '/)
+          chemspec_names(1:5) = (/ 'CO2       ','CO        ','N2        ','O2        ','H2O       '/)
         elseif (lmech_simple) then
-          varname(ichemspec(1):ichemspec(nchemspec))= (/ 'CO2       ','CO        ','N2        ','O2        '/)
+          chemspec_names(1:4) = (/ 'CO2       ','CO        ','N2        ','O2        '/)
         else
-          varname(ichemspec(1):ichemspec(nchemspec))= (/ 'H2        ','O2        ','H2O       ','H         ','O         ',&
+          chemspec_names(1:13) = (/ 'H2        ','O2        ','H2O       ','H         ','O         ',&
              'OH        ','HO2       ','H2O2      ','AR        ','N2        ','HE        ','CO        ','CO2       '/)
         endif
       endif
+
+      do i=1,nchemspec
+        varname(ichemspec(i)) = chemspec_names(i)
+      enddo
 !
 !  Read data on the thermodynamical properties of the different species.
 !  All these data are stored in the array species_constants.
@@ -5128,5 +5134,16 @@ subroutine make_mixture_fraction(f)
 end subroutine make_mixture_fraction
 !***********************************************************************
     include 'chemistry_common.inc'
+!***********************************************************************
+    subroutine pushpars2c(p_par)
+
+    use Syscalls, only: copy_addr
+    use General,  only: string_to_enum
+
+    integer, parameter :: n_pars=150
+    integer(KIND=ikind8), dimension(n_pars) :: p_par
+    integer :: i
+
+    endsubroutine pushpars2c
 !***********************************************************************
 endmodule Chemistry
