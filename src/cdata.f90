@@ -726,7 +726,8 @@ module Cdata
   character (len=30) :: cname_half(mname_half)
 !  Radius inside of which diagnostics are calculated for sphere_in_a_box models
   real :: radius_diag=1.0
-  real :: offset_min_calc=0.
+  real :: offset_min_calc=0.   !PAR_DOC: offset value for computing negative minima,
+                               !PAR_DOC: when some values are masked out with zeros.
 !  Phase boundaries for ISM
   real :: ssmask1=0.0,ssmask2=0.0
 !  Coordinates of the point where some quantities can be printed.

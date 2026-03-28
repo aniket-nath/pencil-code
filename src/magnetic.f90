@@ -2782,10 +2782,14 @@ module Magnetic
 !
 !  In 2-D with nzgrid=1, setting Ax=Ay=0 makes sense, but shouldn't
 !  be compulsory, so allow for this possibility in 2-D.
+!  Note that such a switch was letter also introduced as l2d_aa=T,
+!  but that only works for power_randomphase_hel.
+!  If lhydro=T, put also uz=0.0.
 !
       if (lset_AxAy_zero) then
         if (nzgrid==1) then
           f(:,:,:,iax:iay)=0.0
+          if (lhydro) f(:,:,:,iuz)=0.0
         else
           call fatal_error("init_aa","lset_AxAy_zero=T only allowed with nzgrid=1")
         endif
