@@ -98,7 +98,8 @@ module PointMasses
       lgas_gravity,ldust_gravity,&
       ladd_dragforce,ugas,StokesNumber,&
       lquadratic_drag,llinear_drag,lcoriolis_force,Omega_coriolis,&
-      frac_smooth,lexclude_hills,tau_accretion,lgas_removal,lmomentum_removal
+      frac_smooth,lexclude_hills,tau_accretion,lgas_removal,lmomentum_removal,&
+      lnoselfgrav_primary
 !
   integer, dimension(nqpar,3) :: idiag_xxq=0,idiag_vvq=0
   integer, dimension(nqpar)   :: idiag_torqint=0,idiag_torqext=0
