@@ -7213,6 +7213,10 @@ iloop:do i=1,size(list2)
 
       integer :: dst
       character(len=*) :: src_in
+!AB: added this to make code work. I must admit that the purpose of this entire routine is unclear.
+!AB: It would help to have more comments. The comment 'end gravity' below is probably helpful,
+!AB: rather cryptic. Is that generally true for "enum_default_string"?
+      integer, parameter :: enum_wind_minmaxz__string=0, enum_dspecial_dtZ_adding_wind_string=0
       character(len(src_in)) :: src
 
       src = to_lower_helper(src_in)
