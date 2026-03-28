@@ -6691,11 +6691,6 @@ module Forcing
     call copy_addr(lfcont_as_comaux,p_par(83)) ! bool
     call copy_addr(ifcont_aux,p_par(84)) ! int (n_forcing_cont_max)
 
-    call copy_addr(fcont_from_file,p_par(85)) ! (nx) (ny) (nz) (3)
-    call copy_addr(ks_k,p_par(86)) ! (3) (ks_modes)
-    call copy_addr(ks_a,p_par(87)) ! (3) (ks_modes)
-    call copy_addr(ks_b,p_par(88)) ! (3) (ks_modes)
-    call copy_addr(ks_omega,p_par(89)) ! (ks_modes)
     endsubroutine pushpars2c
 !*******************************************************************
 endmodule Forcing
