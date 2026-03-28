@@ -199,6 +199,7 @@ module Chemistry
 !
   integer :: ireac=0, ireac_CO2=0, ireac_CO=0, ireac_O2=0
 !
+  integer :: enum_reac_rate_method = 0
   contains
 !***********************************************************************
     subroutine register_chemistry
@@ -5144,6 +5145,49 @@ end subroutine make_mixture_fraction
     integer(KIND=ikind8), dimension(n_pars) :: p_par
     integer :: i
 
+    call copy_addr(rgas,p_par(1))
+    call copy_addr(rgas_unit_sys,p_par(2))
+    call copy_addr(lfilter_strict,p_par(3)) ! bool
+    call copy_addr(lreactions,p_par(4)) ! bool
+    call copy_addr(ladvection,p_par(5)) ! bool
+    call copy_addr(ldiffusion,p_par(6)) ! bool
+    call copy_addr(lheatc_chemistry,p_par(7)) ! bool
+    call copy_addr(lt_const,p_par(8)) ! bool
+    call copy_addr(ldiff_corr,p_par(9)) ! bool
+    call copy_addr(lmech_simple,p_par(10)) ! bool
+    call copy_addr(lfilter,p_par(11)) ! bool
+    call copy_addr(nreactions,p_par(12)) ! int
+    call copy_addr(mreactions,p_par(13)) ! int
+    call copy_addr(lreac_as_aux,p_par(14)) ! bool
+    call copy_addr(lmobility,p_par(15)) ! bool
+    call copy_addr(itemp1,p_par(16)) ! int
+    call copy_addr(itemp2,p_par(17)) ! int
+    call copy_addr(itemp3,p_par(18)) ! int
+    call copy_addr(intro_time,p_par(19))
+    call copy_addr(ichem_co,p_par(20)) ! int
+    call copy_addr(y_h2o,p_par(21))
+    call copy_addr(m_h2o,p_par(22))
+    call copy_addr(lchemistry_diag,p_par(23)) ! bool
+    call copy_addr(cp_r_spec,p_par(24)) ! (mx) (my) (mz) (nchemspec)
+    call copy_addr(stoichio,p_par(25)) ! (nchemspec) (mreactions)
+    call copy_addr(sijm,p_par(26)) ! (nchemspec) (mreactions)
+    call copy_addr(sijp,p_par(27)) ! (nchemspec) (mreactions)
+    call copy_addr(back,p_par(28)) ! bool (mreactions)
+    call copy_addr(mobility,p_par(29)) ! (nchemspec)
+    call copy_addr(b_n,p_par(32)) ! (mreactions)
+    call copy_addr(alpha_n,p_par(33)) ! (mreactions)
+    call copy_addr(e_an,p_par(34)) ! (mreactions)
+    call copy_addr(low_coeff,p_par(35)) ! (3) (nreactions)
+    call copy_addr(high_coeff,p_par(36)) ! (3) (nreactions)
+    call copy_addr(troe_coeff,p_par(37)) ! (3) (nreactions)
+    call copy_addr(a_k4,p_par(38)) ! (nchemspec) (nreactions)
+    call copy_addr(mplus_case,p_par(39)) ! bool (nreactions)
+    call copy_addr(orders_m,p_par(40)) ! (5) (nreactions)
+    call copy_addr(orders_p,p_par(41)) ! (5) (nreactions)
+    call copy_addr(species_constants,p_par(42)) ! (nchemspec) (24)
+    call copy_addr(lewis_coef1,p_par(43)) ! (nchemspec)
+    call string_to_enum(enum_{name},{name})
+    call copy_addr(enum_reac_rate_method,p_par(44)) ! int
     endsubroutine pushpars2c
 !***********************************************************************
 endmodule Chemistry

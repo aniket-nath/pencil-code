@@ -252,6 +252,7 @@ module Interstellar
       integer, parameter :: n_pars=0
       integer(KIND=ikind8), dimension(n_pars), intent(out) :: p_par
 
+    call copy_addr(lncoolh,p_par(30)) ! (len_cool)
     endsubroutine pushpars2c
 !***********************************************************************
 endmodule interstellar
