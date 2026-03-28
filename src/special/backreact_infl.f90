@@ -691,7 +691,9 @@ module Special
     endsubroutine dspecial_dt
 !***********************************************************************
     subroutine read_sums_from_device
-
+ !
+ ! Read back the values of the reductions done on the GPU 
+ !
       use GPU, only: get_gpu_reduced_vars
 
       real, dimension(10) :: tmp
