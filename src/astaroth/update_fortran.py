@@ -15,8 +15,7 @@ def main():
     submodule_command = "git submodule update --init --remote"
     build_command = f"cd {PC_HOME}/samples/build-samples/{sample} && pc_build -f GNU-GCC_MPI+GNU-GCC_GPU+GNU-GCC_debug MODIFY_SOURCE_CODE=on"
     command = f"{submodule_command} && {build_command}"
-    os.system(command)
-    return os.system(f"cd {PC_HOME} && git diff --exit-code")
+    return os.system(command)
 
 if __name__ == "__main__":
     sys.exit(main())
