@@ -1307,7 +1307,7 @@ module Special
             echarge=echarge_const
           case ('erun')
             energy_scale=(.5*e2m_all+.5*b2m_all)**.25/ascale
-            echarge=1./sqrt(1./.35**2+41./(48.*pi**2)*alog(real(mass_zboson/energy_scale)))
+            echarge=1./sqrt(1./.35**2+41./(48.*pi**2)*log(real(mass_zboson/energy_scale)))
         endselect
       else
         echarge=echarge_const

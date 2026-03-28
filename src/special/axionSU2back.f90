@@ -271,8 +271,8 @@ module Special
         H=sqrt(onethird*(.5*phidot**2+V))
       endif
 
-      lna=alog(a)
-      lnH=alog(H)
+      lna=log(a)
+      lnH=log(H)
       if (lstart) then
         lnkmin0=nmin0+lnH+lna
         lnkmax0=nmax0+lnH+lna
@@ -379,7 +379,7 @@ module Special
           else
             if (ip<10) print*,'k=',k
             if (lhubble) then
-              f_ode(iaxi_lna)=alog(ascale_ini)
+              f_ode(iaxi_lna)=log(ascale_ini)
               f_ode(iaxi_phi)=phi_ini
               f_ode(iaxi_phidot)=0.
               select case (V_choice)
@@ -680,7 +680,7 @@ module Special
       Uprime=-mu**4/fdecay*sin(chi/fdecay)
       if (lconf_time) then
         if (lhubble_var) then
-          epsilon_sr=0.8*(1+tanh(0.3*(alog(-1/(H*t))-18)))*0.5
+          epsilon_sr=0.8*(1+tanh(0.3*(log(-1/(H*t))-18)))*0.5
           a=-1./(H*t*(1-epsilon_sr))
           Hscript=a*H
           if (.not.lkeep_mQ_const) then
@@ -1089,7 +1089,7 @@ module Special
       Uprime=-mu**4/fdecay*sin(chi/fdecay)
       if (lconf_time) then
         if (lhubble_var) then
-          epsilon_sr=0.8*(1+tanh(0.3*(alog(-1/(H*t))-18)))*0.5
+          epsilon_sr=0.8*(1+tanh(0.3*(log(-1/(H*t))-18)))*0.5
           a=-1./(H*t*(1-epsilon_sr))
           Hscript=a*H
           xi=lamf*chidot*(0.5/Hscript)
@@ -1472,7 +1472,7 @@ module Special
       real :: epsilon_sr,inflaton
       if (lconf_time) then
         if (lhubble_var) then
-          epsilon_sr=0.8*(1+tanh(0.3*(alog(-1/(H*t))-18)))*0.5
+          epsilon_sr=0.8*(1+tanh(0.3*(log(-1/(H*t))-18)))*0.5
           a=-1./(H*t*(1-epsilon_sr))
         else
           a=-1./(H*t)
@@ -1768,8 +1768,8 @@ module Special
 !  a=exp(N), N=H*t (=lna).
 !
       if (llnk_spacing_adjustable .and. lfirst) then
-        lna=alog(a)
-        lnH=alog(H)
+        lna=log(a)
+        lnH=log(H)
         lnkmin=nmin0+lnH+lna
         lnkmax=nmax0+lnH+lna
         if (lnkmin >= (lnkmin0+dlnk)) then
@@ -1827,8 +1827,8 @@ module Special
 !  the adjustable case, so her nswitch means just "output", but no switch
 !
       elseif (lfirst) then
-        lna=alog(a)
-        lnH=alog(H)
+        lna=log(a)
+        lnH=log(H)
         lnkmin=nmin0+lnH+lna
         if (lnkmin >= (lnkmin0_dummy+dlnk)) then
           nswitch=int((lnkmin-lnkmin0_dummy)/dlnk)
