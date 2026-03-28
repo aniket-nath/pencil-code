@@ -611,8 +611,7 @@ module Param_IO
         call read_namelist(read_eos_run_pars            ,'eos'               ,leos, loptional)
         call read_namelist(read_hydro_run_pars          ,'hydro'             ,lhydro .or. lhydro_kinematic, loptional)
         call read_namelist(read_density_run_pars        ,'density'           ,ldensity, loptional)
-!AB: commented out
-!       call read_namelist(read_forcing_run_pars        ,'forcing'           ,lforcing, loptional)
+        call read_namelist(read_forcing_run_pars        ,'forcing'           ,lforcing, loptional)
         call read_namelist(read_gravity_run_pars        ,'grav'              ,lgrav, loptional)
         call read_namelist(read_selfgravity_run_pars    ,'selfgrav'          ,lselfgravity, loptional)
         call read_namelist(read_poisson_run_pars        ,'poisson'           ,lpoisson, loptional)
@@ -981,8 +980,7 @@ module Param_IO
           call write_eos_run_pars(unit)
           call write_hydro_run_pars(unit)
           call write_density_run_pars(unit)
-!AB: commented out
-!         call write_forcing_run_pars(unit)
+          call write_forcing_run_pars(unit)
           call write_gravity_run_pars(unit)
           call write_selfgravity_run_pars(unit)
           call write_poisson_run_pars(unit)
