@@ -676,6 +676,15 @@ module Pscalar
 
     !call copy_addr(pscalar_diff,p_par(1))
 
+    call copy_addr(nopscalar,p_par(1)) ! bool
+    call copy_addr(lupw_lncc,p_par(2)) ! bool
+    call copy_addr(ldustdrift,p_par(3)) ! bool
+    call copy_addr(pscalar_diff,p_par(4))
+    call copy_addr(tensor_pscalar_diff,p_par(5))
+    call copy_addr(pscalar_diff_shock,p_par(6))
+    call copy_addr(gradc0,p_par(7)) ! real3
+    call copy_addr(bunit,p_par(8)) ! (nx) (ny) (nz) (3)
+    call copy_addr(hhh,p_par(9)) ! (nx) (ny) (nz) (3)
     endsubroutine pushpars2c
 !***********************************************************************
 endmodule Pscalar

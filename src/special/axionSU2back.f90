@@ -2073,6 +2073,18 @@ module Special
     call copy_addr(dlnk,p_par(53))
     call copy_addr(dk,p_par(54))
 
+    call copy_addr(iaxi_ur,p_par(55)) ! int
+    call copy_addr(iaxi_urdot,p_par(56)) ! int
+    call copy_addr(iaxi_ul,p_par(57)) ! int
+    call copy_addr(iaxi_uldot,p_par(58)) ! int
+    call copy_addr(iaxi_imur,p_par(59)) ! int
+    call copy_addr(iaxi_imurdot,p_par(60)) ! int
+    call copy_addr(iaxi_imul,p_par(61)) ! int
+    call copy_addr(iaxi_imuldot,p_par(62)) ! int
+    call copy_addr(hdot,p_par(63))
+    call copy_addr(mscal,p_par(64))
+    call copy_addr(sgn_g,p_par(65))
+    call copy_addr(lschwinger_scalar,p_par(66)) ! bool
     endsubroutine pushpars2c
 !***********************************************************************
 !***********************************************************************
