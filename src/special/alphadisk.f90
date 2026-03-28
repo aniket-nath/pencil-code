@@ -9,7 +9,7 @@
 !  Mac Low (2010, ApJ, 715, 68).
 !
 !** AUTOMATIC CPARAM.INC GENERATION ****************************
-! Declare (for generation of alphadisk_dummies.inc) the number of f array
+! Declare (for generation of special_dummies.inc) the number of f array
 ! variables and auxiliary variables added by this module
 !
 ! CPARAM logical, parameter :: lspecial = .true.
@@ -19,7 +19,7 @@
 ! COMMUNICATED AUXILIARIES 1
 !
 !***************************************************************
-module alphadisk
+module Special
 !
   use Cdata
   use General, only: keep_compiler_quiet
@@ -1417,6 +1417,6 @@ module alphadisk
 !**  copies dummy routines from nospecial.f90 for any Special      **
 !**  routines not implemented in this file                         **
 !**                                                                **
-    include '../alphadisk_dummies.inc'
+    include '../special_dummies.inc'
 !********************************************************************
-endmodule alphadisk 
+endmodule Special
