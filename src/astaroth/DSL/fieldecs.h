@@ -262,7 +262,9 @@ field_order(AC_ixx_chiral__mod__chiral-1) Field F_XX_CHIRAL
 field_order(AC_iyy_chiral__mod__chiral-1) Field F_YY_CHIRAL
 field_order(AC_izz_chiral__mod__chiral-1) Field F_ZZ_CHIRAL
 
-Field F_SIGMA
+field_order(AC_isigma__mod__alphadisk-1) Field F_SIGMA
+field_order(AC_imdot__mod__alphadisk-1) Field F_MDOT
+field_order(AC_itmid__mod__alphadisk-1) Field F_TMID
 not_implemented(message)
 {
     print("NOT IMPLEMENTED: %s\n",message)
