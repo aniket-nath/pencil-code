@@ -4032,7 +4032,7 @@ set_ghosts_for_onesided_ders(AcBoundary boundary,AC_TOP_BOT topbot, Field j, int
 	ac_set_ghosts_for_onesided_derivs(boundary,j)
 }
 
-#if Leos_temperature_ionization_MODULE 
+#if Leos_temperature_ionization_MODULE && LDENSITY
 bc_sts(AcBoundary boundary,AC_TOP_BOT topbot,Field j)
 {
   suppress_unused_warning(boundary)
