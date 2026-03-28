@@ -12152,7 +12152,6 @@ print*,'AXEL2: should not be here (eta) ... '
     call copy_addr(lcurlb_as_aux,p_par(276)) ! bool
     call copy_addr(lbij_as_aux,p_par(277)) ! bool
     call copy_addr(bij_0d_test,p_par(278)) ! (3) (3)
-    call copy_addr(lbij_test,p_par(279)) ! bool
     call copy_addr(luse_bgb_as_jxb,p_par(280)) ! bool
     call copy_addr(lreset_vart_only_at_start,p_par(281)) ! bool
     call copy_addr(enum_div_sld_magn,p_par(282)) ! int
