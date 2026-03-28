@@ -940,5 +940,3 @@ integer, parameter :: enum_reduced_top_string = 934
 integer, parameter :: enum_imposedZcs2Zcore_string = 935
 integer, parameter :: enum_csZstep_string = 936
 integer, parameter :: enum_from_file_h5_string = 937
-integer, parameter :: enum_dspecial_dtZ_adding_wind_string = 938
-integer, parameter :: enum_wind_minmaxZ__string = 939

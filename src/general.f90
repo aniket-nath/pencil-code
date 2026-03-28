@@ -8067,10 +8067,6 @@ iloop:do i=1,size(list2)
         dst = enum_ultra_slow_roll1_string
       case('reduced_top')
         dst = enum_reduced_top_string
-      case('dspecial_dt: adding wind')
-        dst = enum_dspecial_dtZ_adding_wind_string
-      case('wind minmax: ')
-        dst = enum_wind_minmaxZ__string
       case('waterfall')
         dst = enum_waterfall_string
       case('imposed-cs2-core')
