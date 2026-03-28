@@ -7209,6 +7209,12 @@ iloop:do i=1,size(list2)
 !***********************************************************************
     subroutine string_to_enum_scalar(dst,src_in)
 
+!
+! This function defines a global mapping from possible strings
+! to integers/enums.
+! Needed to replace strings on the rhss,mainly those in case statements, 
+! with integers since integers operate nicer on GPUs.
+!
       use Cdata, only: lroot
 
       integer :: dst
@@ -7232,8 +7238,8 @@ iloop:do i=1,size(list2)
       case('accretor')
         dst = enum_accretor_string
       case('default')
-        dst = enum_default_string      !end gravity
-      case('nothing')                  !begin hydro
+        dst = enum_default_string      
+      case('nothing')                  
         dst = enum_nothing_string
       case('linear')
         dst = enum_linear_string
@@ -7298,7 +7304,7 @@ iloop:do i=1,size(list2)
       case('uumz_profile')
         dst = enum_uumz_profile_string
       case('omega_profile')
-        dst = enum_omega_profile_string     !end hydro
+        dst = enum_omega_profile_string    
       case('zero')
         dst = enum_zero_string
       case('0')
