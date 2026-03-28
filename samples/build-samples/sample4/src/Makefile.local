@@ -10,11 +10,12 @@ VISCOSITY = noviscosity
 
 HYDRO     = nohydro
 DENSITY   = nodensity
-ENTROPY   = noentropy
+ENTROPY   =   temperature_ionization
 MAGNETIC  = nomagnetic
 RADIATION = noradiation
 PSCALAR   = nopscalar
 EOS       = eos_chemistry
+CHEMISTRY = chemistry
 
 GRAVITY   = nogravity
 FORCING   = noforcing
