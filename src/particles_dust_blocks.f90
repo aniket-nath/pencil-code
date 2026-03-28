@@ -96,6 +96,8 @@ module Particles
   character (len=labellen), dimension (ninit) :: initvvp='nothing'
   character (len=labellen) :: gravx_profile='', gravz_profile=''
   character (len=labellen) :: gravr_profile=''
+
+  real :: rpinit_int=-impossible, rpinit_ext=-impossible
 !
   namelist /particles_init_pars/ &
       initxxp, initvvp, xp0, yp0, zp0, vpx0, vpy0, vpz0, delta_vp0, &
@@ -122,7 +124,8 @@ module Particles
       lbrick_partition, ldraglaw_variable, ladopt_own_light_bricks, &
       xp1, yp1, zp1, vpx1, vpy1, vpz1, xp2, yp2, zp2, vpx2, vpy2, vpz2, &
       xp3, yp3, zp3, vpx3, vpy3, vpz3, lreassign_strat_rhom, &
-      ldraglaw_eps_stk_transonic, luse_tau_ap, mean_free_path_gas
+      ldraglaw_eps_stk_transonic, luse_tau_ap, mean_free_path_gas, &
+      rpinit_int, rpinit_ext
 !
   namelist /particles_run_pars/ &
       bcpx, bcpy, bcpz, tausp, dsnap_par_minor, beta_dPdr_dust, &
@@ -439,6 +442,7 @@ module Particles
       real :: r, p, q, px, py, pz, eps, cs, k2_xxp, rp2
       real :: dim1, npar_loc_x, npar_loc_y, npar_loc_z, dx_par, dy_par, dz_par
       real :: rad,rad_scl,tht,phi,tmp,OO,xx0,yy0,r2
+      real :: rpar_int, rpar_ext
       integer :: l, j, k, ix0, iy0, iz0, ib
       logical :: lequidistant=.false.
 !
@@ -666,8 +670,39 @@ module Particles
             else
               call fatal_error("init_particles","The world is flat, and we never got here")
             endif
+
+!
+! WL: This if Cartesian loop is probably not needed anymore -- the nprocx==1 construction
+! is pre-parallelization in x, which is ancient history at this point.
+!
+            if (lcartesian_coords) then
+              if (nprocx==1) then
+                rpar_int=rp_int
+                rpar_ext=rp_ext
+              else
+                call not_implemented("init_particles", &
+                                     "random-cyl for nprocx/=1 in Cartesian. Parallelize in y or z")
+              endif
+            else
+!
+! Allow for initializing the particles at a different range (rpinit_[int/ext]) than
+! the migration/removal range (rp_[int/ext])
+!
+              if (rpinit_int==-impossible) then
+                !default values
+                rpar_int = xyz0_loc(1)
+              else
+                rpar_int = rpinit_int
+              endif
+              if (rpinit_ext==-impossible) then
+                rpar_ext = xyz1_loc(1)
+              else
+                rpar_ext = rpinit_ext
+              endif
+            endif
+
             call random_number_wrapper(rad_scl)
-            rad_scl = rp_int**tmp + rad_scl*(rp_ext**tmp-rp_int**tmp)
+            rad_scl = rpar_int**tmp + rad_scl*(rpar_ext**tmp-rpar_int**tmp)
             rad = rad_scl**(1./tmp)
 !
 ! Random in azimuth
