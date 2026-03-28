@@ -10,18 +10,17 @@ VISCOSITY = noviscosity
 
 HYDRO     = nohydro
 DENSITY   = nodensity
-ENTROPY   = noentropy
+ENTROPY   =   noentropy
 MAGNETIC  = nomagnetic
 RADIATION = noradiation
 PSCALAR   = nopscalar
 EOS       = eos_chemistry_simple
+CHEMISTRY = chemistry_simple
 
 INTERSTELLAR =   interstellar
 GRAVITY      =   gravity_simple
 FORCING   = noforcing
 SHEAR     = noshear
 
-SPECIAL   = special/alphadisk
 
 REAL_PRECISION = double
-GPU = gpu_astaroth
