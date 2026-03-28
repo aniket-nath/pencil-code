@@ -12156,6 +12156,7 @@ print*,'AXEL2: should not be here (eta) ... '
     call copy_addr(lreset_vart_only_at_start,p_par(281)) ! bool
     call copy_addr(enum_div_sld_magn,p_par(282)) ! int
 
+    call copy_addr(lbij_test,p_par(283)) ! bool
     endsubroutine pushpars2c
 !***********************************************************************
 endmodule Magnetic
