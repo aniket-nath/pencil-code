@@ -145,7 +145,7 @@ module Forcing
   real, dimension (100,n_forcing_cont_max) :: xi_GP,eta_GP
   real, allocatable, dimension (:,:,:,:) :: fcont_from_file
 !
-  namelist /forcing_run_pars/ &
+  namelist /special_run_pars/ &
        tforce_start,tforce_start2,&
        iforce,force,force_double,relhel,crosshel,height_ff,r_ff,r_ff_hel, &
        rcyl_ff,width_ff,nexp_ff,lff_as_aux,Bconst,Bslope, rel_zcomp, &
@@ -6416,23 +6416,23 @@ module Forcing
 !
     endsubroutine calc_diagnostics_forcing
 !***********************************************************************
-    subroutine read_forcing_run_pars(iostat)
+    subroutine read_special_run_pars(iostat)
 !
       use File_io, only: parallel_unit
 !
       integer, intent(out) :: iostat
 !
-      read(parallel_unit, NML=forcing_run_pars, IOSTAT=iostat)
+      read(parallel_unit, NML=special_run_pars, IOSTAT=iostat)
 !
-    endsubroutine read_forcing_run_pars
+    endsubroutine read_special_run_pars
 !***********************************************************************
-    subroutine write_forcing_run_pars(unit)
+    subroutine write_special_run_pars(unit)
 !
       integer, intent(in) :: unit
 !
-      write(unit, NML=forcing_run_pars)
+      write(unit, NML=special_run_pars)
 !
-    endsubroutine write_forcing_run_pars
+    endsubroutine write_special_run_pars
 !***********************************************************************
     subroutine input_persist_forcing_id(id,done)
 !
@@ -6691,6 +6691,11 @@ module Forcing
     call copy_addr(lfcont_as_comaux,p_par(83)) ! bool
     call copy_addr(ifcont_aux,p_par(84)) ! int (n_forcing_cont_max)
 
+    call copy_addr(fcont_from_file,p_par(85)) ! (nx) (ny) (nz) (3)
+    call copy_addr(ks_k,p_par(86)) ! (3) (ks_modes)
+    call copy_addr(ks_a,p_par(87)) ! (3) (ks_modes)
+    call copy_addr(ks_b,p_par(88)) ! (3) (ks_modes)
+    call copy_addr(ks_omega,p_par(89)) ! (ks_modes)
     endsubroutine pushpars2c
 !*******************************************************************
 endmodule Forcing
