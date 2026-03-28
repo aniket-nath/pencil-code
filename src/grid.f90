@@ -2615,6 +2615,13 @@ if (abs(sum(ws)-1.)>1e-7) write(iproc+40,'(6(e12.5,1x), e12.5)') ws, sum(ws)
       logical :: loc
       integer :: shift, inear_max
       real :: h, a, b, c, xiup
+
+      real :: xi_lo, xi_hi, xi_mid, xi_star
+      real :: gmid, glo, gup
+      real :: f_lo, f_mid, f_hi
+      real :: tol
+      integer :: i, it
+      integer, parameter :: maxit = 50
 !
 !  Sanity check.
 !
@@ -2670,6 +2677,64 @@ if (abs(sum(ws)-1.)>1e-7) write(iproc+40,'(6(e12.5,1x), e12.5)') ws, sum(ws)
 !
       case ("log") func
         xi = xiup / log(xyz1(dir) / xyz0(dir)) * log(x / xyz0(dir))
+!
+      case ('sus') func
+!
+!  Stretched-uniform-stretched grid.
+!
+        tol = 1e-10 * xiup
+        xi_star = find_star_bisection( 0.0, xiup,                 &
+             xyz0(dir), xyz0(dir)+Lxyz(dir),                      &
+             xyz_star(dir),                                       &
+             grid_func(dir),                                      &
+             param2=(/dxi_fact(dir), trans_width(dir),            &
+             trans_delta(dir)/) )
+        call grid_profile(0.0      - xi_star, grid_func(dir), glo, &
+             param2=(/dxi_fact(dir), trans_width(dir), trans_delta(dir)/))
+        call grid_profile(xiup     - xi_star, grid_func(dir), gup, &
+             param2=(/dxi_fact(dir), trans_width(dir), trans_delta(dir)/))
+!
+        ! Safety check
+        if (abs(gup - glo) < 1e-14) then
+          print *, 'SUS inverse: normalization collapse'
+          stop
+        endif
+!
+        do i=1,mx
+          xi_lo = 0.0
+          xi_hi = xiup
+          ! lower endpoint
+          call grid_profile(xi_lo - xi_star, grid_func(dir), gmid, &
+               param2=(/dxi_fact(dir), trans_width(dir), trans_delta(dir)/))
+          f_lo = xyz0(dir) + Lxyz(dir)*(gmid - glo)/(gup - glo) - x(i)
+          ! upper endpoint
+          call grid_profile(xi_hi - xi_star, grid_func(dir), gmid, &
+               param2=(/dxi_fact(dir), trans_width(dir), trans_delta(dir)/))
+          f_hi = xyz0(dir) + Lxyz(dir)*(gmid - glo)/(gup - glo) - x(i)
+          ! bracket check
+          if (f_lo * f_hi > 0.0) then
+            print *, "SUS inverse: root not bracketed for i=", i
+            print *, "x(i) =", x(i)
+            print *, "f_lo =", f_lo, "f_hi =", f_hi
+            stop
+          endif
+!
+          do it=1,maxit
+            xi_mid = 0.5*(xi_lo + xi_hi)
+            call grid_profile(xi_mid - xi_star, grid_func(dir), gmid, &
+                 param2=(/dxi_fact(dir), trans_width(dir), trans_delta(dir)/))
+            f_mid = xyz0(dir) + Lxyz(dir)*(gmid - glo)/(gup - glo) - x(i)
+            if (abs(xi_hi - xi_lo) < tol) exit
+            if (f_lo*f_mid < 0.0) then
+              xi_hi = xi_mid
+              f_hi  = f_mid
+            else
+              xi_lo = xi_mid
+              f_lo = f_mid
+            endif
+          enddo
+          xi(i) = 0.5*(xi_lo + xi_hi)
+        enddo
 !
       case default func
         call fatal_error('inverse_grid in grid.f90', &
