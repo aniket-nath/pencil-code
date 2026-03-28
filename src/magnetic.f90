@@ -269,7 +269,7 @@ module Magnetic
   logical :: loverride_ee=.false., loverride_ee2=.false., loverride_ee_decide=.false.
   logical :: lignore_1rho_in_Lorentz=.false., lnorm_aa_kk=.false., lohm_evolve=.false.
 !
-  namelist /special_init_pars/ &
+  namelist /magnetic_init_pars/ &
       B_ext, B0_ext, B0_ext_z, B0_ext_z_H, t_bext, t0_bext, J_ext, lohmic_heat, radius, epsilonaa, &
       ABCaa, x0aa, y0aa, z0aa, widthaa, nexp_aa, &
       RFPradB, RFPradJ, by_left, by_right, bz_left, bz_right, relhel_aa, &
@@ -395,7 +395,7 @@ module Magnetic
   real :: zbot_moving_layer=0., ztop_moving_layer=0., speed_moving_layer=0., edge_moving_layer=.1
   real :: eta_tdep_ascale_power=0.
 !
-  namelist /special_run_pars/ &
+  namelist /magnetic_run_pars/ &
       eta, eta1, eta_hyper2, eta_hyper3, eta_anom, eta_anom_thresh, eta_ampl, &
       B_ext, B0_ext, B0_ext_z, B0_ext_z_H, t_bext, t0_bext, J_ext, &
       J_ext_quench, omega_Bz_ext, nu_ni, hall_term, Hhall, battery_term, &
@@ -2101,7 +2101,7 @@ module Magnetic
           endif
         else
           call fatal_error('initialize_magnetic','For fargo advection you need advective gauge. '// &
-                           'Switch ladvective_gauge=T in special_run_pars')
+                           'Switch ladvective_gauge=T in magnetic_run_pars')
         endif
       endif
 !
@@ -8319,57 +8319,57 @@ print*,'AXEL2: should not be here (eta) ... '
 !
     endsubroutine curflux
 !***********************************************************************
-    subroutine read_special_init_pars(iostat)
+    subroutine read_magnetic_init_pars(iostat)
 !
       use File_io, only: parallel_unit
 !
       integer, intent(out) :: iostat
 !
-      read(parallel_unit, NML=special_init_pars, IOSTAT=iostat)
+      read(parallel_unit, NML=magnetic_init_pars, IOSTAT=iostat)
 !
 !  read namelist for mean-field theory (if invoked)
 !
       if (lmagn_mf) call read_magn_mf_init_pars(iostat)
 !
-    endsubroutine read_special_init_pars
+    endsubroutine read_magnetic_init_pars
 !***********************************************************************
-    subroutine write_special_init_pars(unit)
+    subroutine write_magnetic_init_pars(unit)
 !
       integer, intent(in) :: unit
 !
-      write(unit, NML=special_init_pars)
+      write(unit, NML=magnetic_init_pars)
 !
 !  write namelist for mean-field theory (if invoked)
 !
       if (lmagn_mf) call write_magn_mf_init_pars(unit)
 !
-    endsubroutine write_special_init_pars
+    endsubroutine write_magnetic_init_pars
 !***********************************************************************
-    subroutine read_special_run_pars(iostat)
+    subroutine read_magnetic_run_pars(iostat)
 !
       use File_io, only: parallel_unit
 !
       integer, intent(out) :: iostat
 !
-      read(parallel_unit, NML=special_run_pars, IOSTAT=iostat)
+      read(parallel_unit, NML=magnetic_run_pars, IOSTAT=iostat)
 !
 !  read namelist for mean-field theory (if invoked)
 !
       if (lmagn_mf) call read_magn_mf_run_pars(iostat)
 !
-    endsubroutine read_special_run_pars
+    endsubroutine read_magnetic_run_pars
 !***********************************************************************
-    subroutine write_special_run_pars(unit)
+    subroutine write_magnetic_run_pars(unit)
 !
       integer, intent(in) :: unit
 !
-      write(unit, NML=special_run_pars)
+      write(unit, NML=magnetic_run_pars)
 !
 !  write namelist for mean-field theory (if invoked)
 !
       if (lmagn_mf) call write_magn_mf_run_pars(unit)
 !
-    endsubroutine write_special_run_pars
+    endsubroutine write_magnetic_run_pars
 !***********************************************************************
     subroutine forcing_continuous(df)
 !
@@ -11757,7 +11757,7 @@ print*,'AXEL2: should not be here (eta) ... '
 !  Get the external magnetic field at current time step.
 !
 !  lbext_curvilinear = .true. is default.  The B_ext the user defines in
-!  special_init_pars respects the coordinate system of preference which
+!  magnetic_init_pars respects the coordinate system of preference which
 !  means that B_ext=(0.0,1.0,0.0) is an azimuthal field in cylindrical
 !  coordinates and a polar one in spherical.
 !
@@ -12156,7 +12156,6 @@ print*,'AXEL2: should not be here (eta) ... '
     call copy_addr(lreset_vart_only_at_start,p_par(281)) ! bool
     call copy_addr(enum_div_sld_magn,p_par(282)) ! int
 
-    call copy_addr(lbij_test,p_par(283)) ! bool
     endsubroutine pushpars2c
 !***********************************************************************
 endmodule Magnetic
