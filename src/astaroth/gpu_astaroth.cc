@@ -1530,7 +1530,6 @@ update_forcing(const int isubstep)
 void
 prepare_rhs(const int isubstep, double t)
 {
-  update_forcing(isubstep);
   fourier_boundary_conditions();
   acDeviceSetInput(acGridGetDevice(), AC_step_num,(PC_SUB_STEP_NUMBER) (isubstep-1));
   if (lshear) 
@@ -1600,26 +1599,28 @@ extern "C" void substepGPU(int isubstep, double t)
 //  Do the 'isubstep'th integration step on all GPUs on the node and handle boundaries.
 //
 {
-	prepare_rhs(isubstep,t);
+  prepare_rhs(isubstep,t);
   if (isubstep == 1) 
   {
 #if LGRAVITATIONAL_WAVES_HTXK
-	  if(GW_thread.joinable())
-	  {
-	          GW_thread.join();
-	  }
+    if(GW_thread.joinable())
+    {
+            GW_thread.join();
+    }
 #endif
     set_timestep(t);
 #if LGRAVITATIONAL_WAVES_HTXK
-	  if(lsplit_gw_rhs_from_rest_on_gpu)
-	  {
-  		acGridExecuteTaskGraph(acGetOptimizedDSLTaskGraph(AC_GW_rhs),1);
-	  }
+    if(lsplit_gw_rhs_from_rest_on_gpu)
+    {
+          acGridExecuteTaskGraph(acGetOptimizedDSLTaskGraph(AC_GW_rhs),1);
+    }
 #endif
   }
+  //TP: important that forcing vectors are updated only after the timestep is calculated
+  //since the timestep is used in the calculation
+  update_forcing(isubstep);
 
   AcTaskGraph *rhs =  acGetOptimizedDSLTaskGraph(AC_rhs);
-
   auto start = MPI_Wtime();
   acGridExecuteTaskGraph(rhs, 1);
   auto end = MPI_Wtime();
