@@ -20,7 +20,7 @@ HYDRO     = hydro
 DENSITY   = density
 ENTROPY   = entropy
 MAGNETIC  = nomagnetic
-RADIATION = radiation
+RADIATION = radiation_ray
 PSCALAR   = pscalar
 
 EOS       = eos_ionization
