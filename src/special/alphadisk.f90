@@ -9,7 +9,7 @@
 !  Mac Low (2010, ApJ, 715, 68).
 !
 !** AUTOMATIC CPARAM.INC GENERATION ****************************
-! Declare (for generation of alphadisk_dummies.inc) the number of f array
+! Declare (for generation of special_dummies.inc) the number of f array
 ! variables and auxiliary variables added by this module
 !
 ! CPARAM logical, parameter :: lspecial = .true.
@@ -19,7 +19,7 @@
 ! COMMUNICATED AUXILIARIES 1
 !
 !***************************************************************
-module alphadisk
+module Special
 !
   use Cdata
   use General, only: keep_compiler_quiet
@@ -81,7 +81,7 @@ module alphadisk
   character (len=labellen), dimension(ninit) :: inittmid='nothing'
   character (len=labellen) :: temperature_model='radiative'
 !
-  namelist /alphadisk_init_pars/ &
+  namelist /special_init_pars/ &
       initsigma, mdot_input, plaw_density, sigma0, alpha, mwind_input, &
       inittmid, plaw_r0, plaw_temperature, temperature0, mumol, &
       r0_gaussian, width_gaussian, temperature_model, nut_constant, &
@@ -90,7 +90,7 @@ module alphadisk
       sigma_middle, sigma_floor, tmid_table_buffer,&
       temperature_star,radius_star, dlnHdlnR
 !
-  namelist /alphadisk_run_pars/ &
+  namelist /special_run_pars/ &
       lwind
 !
   real, dimension(:)  , allocatable :: sigma_table, lnsigma_table
@@ -630,7 +630,7 @@ module alphadisk
 !
       integer, intent(out) :: iostat
 !
-      read(parallel_unit, NML=alphadisk_init_pars, IOSTAT=iostat)
+      read(parallel_unit, NML=special_init_pars, IOSTAT=iostat)
 !
     endsubroutine read_special_init_pars
 !***********************************************************************
@@ -638,7 +638,7 @@ module alphadisk
 !
       integer, intent(in) :: unit
 !
-      write(unit, NML=alphadisk_init_pars)
+      write(unit, NML=special_init_pars)
 !
     endsubroutine write_special_init_pars
 !***********************************************************************
@@ -648,7 +648,7 @@ module alphadisk
 !
       integer, intent(out) :: iostat
 !
-      read(parallel_unit, NML=alphadisk_run_pars, IOSTAT=iostat)
+      read(parallel_unit, NML=special_run_pars, IOSTAT=iostat)
 !
     endsubroutine read_special_run_pars
 !***********************************************************************
@@ -656,7 +656,7 @@ module alphadisk
 !
       integer, intent(in) :: unit
 !
-      write(unit, NML=alphadisk_run_pars)
+      write(unit, NML=special_run_pars)
 !
     endsubroutine write_special_run_pars
 !***********************************************************************
@@ -1417,6 +1417,6 @@ module alphadisk
 !**  copies dummy routines from nospecial.f90 for any Special      **
 !**  routines not implemented in this file                         **
 !**                                                                **
-    include '../alphadisk_dummies.inc'
+    include '../special_dummies.inc'
 !********************************************************************
-endmodule alphadisk
+endmodule Special 

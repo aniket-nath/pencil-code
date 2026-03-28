@@ -31,7 +31,7 @@
 !  Special equation                                | dspecial_dt
 !
 !** AUTOMATIC CPARAM.INC GENERATION ****************************
-! Declare (for generation of gravitational_waves_hTXk_dummies.inc) the number of f array
+! Declare (for generation of special_dummies.inc) the number of f array
 ! variables and auxiliary variables added by this module
 !
 ! CPARAM logical, parameter :: lspecial = .true.
@@ -79,7 +79,7 @@
 ! Where geo_kws it replaced by the filename of your new module
 ! upto and not including the .f90
 !
-module gravitational_waves_hTXk
+module Special
 !
   use Cdata
   use Initcond
@@ -161,7 +161,7 @@ module gravitational_waves_hTXk
 !
 ! input parameters
 !
-  namelist /gravitational_waves_hTXk_init_pars/ &
+  namelist /special_init_pars/ &
     ctrace_factor, cstress_prefactor, fourthird_in_stress, lno_transverse_part, &
     initGW, amplGW, amplGW2, amplGWX, kpeak_GW, initpower_gw, initpower2_gw, cutoff_GW, &
     lStress_as_aux, lgamma_factor, &
@@ -176,7 +176,7 @@ module gravitational_waves_hTXk
     lread_pulsar !, nbin_angular
 !
 ! run parameters
-  namelist /gravitational_waves_hTXk_run_pars/ &
+  namelist /special_run_pars/ &
     ctrace_factor, cstress_prefactor, fourthird_in_stress, lno_transverse_part, &
     ldebug_print, lswitch_sign_e_X, lswitch_symmetric, lStress_as_aux, &
     lswitch_sign_e_X_boost, &
@@ -1309,7 +1309,7 @@ module gravitational_waves_hTXk
 !
       integer, intent(out) :: iostat
 !
-      read(parallel_unit, NML=gravitational_waves_hTXk_init_pars, IOSTAT=iostat)
+      read(parallel_unit, NML=special_init_pars, IOSTAT=iostat)
 !
     endsubroutine read_special_init_pars
 !***********************************************************************
@@ -1317,7 +1317,7 @@ module gravitational_waves_hTXk
 !
       integer, intent(in) :: unit
 !
-      write(unit, NML=gravitational_waves_hTXk_init_pars)
+      write(unit, NML=special_init_pars)
 !
     endsubroutine write_special_init_pars
 !***********************************************************************
@@ -1327,7 +1327,7 @@ module gravitational_waves_hTXk
 !
       integer, intent(out) :: iostat
 !
-      read(parallel_unit, NML=gravitational_waves_hTXk_run_pars, IOSTAT=iostat)
+      read(parallel_unit, NML=special_run_pars, IOSTAT=iostat)
 !
     endsubroutine read_special_run_pars
 !***********************************************************************
@@ -1335,7 +1335,7 @@ module gravitational_waves_hTXk
 !
       integer, intent(in) :: unit
 !
-      write(unit, NML=gravitational_waves_hTXk_run_pars)
+      write(unit, NML=special_run_pars)
 !
     endsubroutine write_special_run_pars
 !***********************************************************************
@@ -3556,6 +3556,6 @@ if (ip < 25 .and. abs(k1) <nx .and. abs(k2) <ny .and. abs(k3) <nz) print*,k1,k2,
 !**  copies dummy routines from nospecial.f90 for any Special      **
 !**  routines not implemented in this file                         **
 !**                                                                **
-    include '../gravitational_waves_hTXk_dummies.inc'
+    include '../special_dummies.inc'
 !********************************************************************
-endmodule gravitational_waves_hTXk
+endmodule Special
