@@ -7439,6 +7439,13 @@ module Chemistry
     call copy_addr(mc3h8,p_par(131))
     call copy_addr(lcompute_rhs_y_full,p_par(132))
 
+    call copy_addr(cp_full,p_par(133)) ! (mx) (my) (mz)
+    call copy_addr(cv_full,p_par(134)) ! (mx) (my) (mz)
+    call copy_addr(lambda_full,p_par(135)) ! (mx) (my) (mz)
+    call copy_addr(cv_r_spec_full,p_par(136)) ! (mx) (my) (mz) (nchemspec)
+    call copy_addr(diff_full_add,p_par(137)) ! (mx) (my) (mz) (nchemspec)
+    call copy_addr(xx_full,p_par(138)) ! (mx) (my) (mz) (nchemspec)
+    call copy_addr(rhs_y_full,p_par(139)) ! (mx) (my) (mz) (nchemspec)
   endsubroutine pushpars2c
 !***********************************************************************
   subroutine make_flame_index(f)

@@ -1171,6 +1171,12 @@ module EquationOfState
 
     call copy_addr(cs20,p_par(1))
 
+    call copy_addr(rho0,p_par(2))
+    call copy_addr(lnrho0,p_par(3))
+    call copy_addr(lpp_as_aux,p_par(4)) ! bool
+    call copy_addr(rgas,p_par(5))
+    call copy_addr(imass,p_par(6)) ! int
+    call copy_addr(mu1_full,p_par(7)) ! (mx) (my) (mz)
     endsubroutine pushpars2c
 !***********************************************************************
 !********************************************************************
