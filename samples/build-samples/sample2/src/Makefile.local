@@ -23,4 +23,3 @@ SHEAR     = noshear
 SPECIAL   = special/alphadisk special/disp_current special/chiral_mhd
 
 REAL_PRECISION = double
-GPU = gpu_astaroth

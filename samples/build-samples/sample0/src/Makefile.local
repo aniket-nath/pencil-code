@@ -17,4 +17,3 @@ PSCALAR=pscalar_nolog
 POWER=power_spectrum
 SPECIAL = special/backreact_infl special/disp_current special/gravitational_waves_hTXk
 REAL_PRECISION=double
-GPU = gpu_astaroth
