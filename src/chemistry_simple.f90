@@ -5186,7 +5186,6 @@ end subroutine make_mixture_fraction
     call copy_addr(orders_p,p_par(41)) ! (5) (nreactions)
     call copy_addr(species_constants,p_par(42)) ! (nchemspec) (24)
     call copy_addr(lewis_coef1,p_par(43)) ! (nchemspec)
-    call string_to_enum(enum_{name},{name})
     call copy_addr(enum_reac_rate_method,p_par(44)) ! int
     endsubroutine pushpars2c
 !***********************************************************************
