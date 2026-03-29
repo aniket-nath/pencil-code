@@ -1199,7 +1199,7 @@ module Dustvelocity
 !  (the term must be added to the dust equation of motion when measuring
 !  velocities relative to the shear flow modified by the global pressure grad.)
 !
-      if (beta_dPdr_dust/=0.0) df(l1:l2,m,n,iudx(k)) = &
+      if (beta_dPdr_dust/=0.0) df(ix+nghost,m,n,iudx(k)) = &
          df(ix+nghost,m,n,iudx(k)) + p%cs2(ix)*beta_dPdr_dust_scaled
 !
 !  Artificial pressure force
@@ -1276,7 +1276,9 @@ module Dustvelocity
 !
       if (lviscd_hyper3_polar) then
         do j=1,3
-          fviscd(j) = fviscd(j) + nud_hyper3(k)*pi4_1*sum(grad6_uud(ix,:,j,k)*dline_1(ix,:)**2)
+          do i=1,3
+            fviscd(j) = fviscd(j) + nud_hyper3(k)*pi4_1*grad6_uud(ix,i,j,k)*dline_1(ix,i)**2
+          enddo
         enddo
         if (lupdate_courant_dt) diffus_nud3=diffus_nud3+nud_hyper3(k)*pi4_1*dxmin_pencil**4
       endif
@@ -1285,7 +1287,9 @@ module Dustvelocity
 !
       if (lviscd_hyper3_mesh) then
         do j=1,3
-          fviscd(j) = fviscd(j) + nud_hyper3_mesh(k)*pi5_1/60.*sum(grad6_uud(ix,:,j,k)*dline_1(ix,:))
+          do i=1,3
+            fviscd(j) = fviscd(j) + nud_hyper3_mesh(k)*pi5_1/60.*grad6_uud(ix,i,j,k)*dline_1(ix,i)
+          enddo
         enddo
         if (lupdate_courant_dt) then
           advec_hypermesh_uud=nud_hyper3_mesh(k)*pi5_1*sqrt(dxyz_2)
